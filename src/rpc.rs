@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str};
-use reqwest::{StatusCode, blocking::get};
+use reqwest::{StatusCode, get};
 use cosmos_sdk_proto::cosmos::auth::v1beta1::{QueryAccountRequest, BaseAccount};
 use cosmos_sdk_proto::cosmos::auth::v1beta1::QueryAccountResponse;
 use cosmos_sdk_proto::cosmos::auth::v1beta1::query_client::{QueryClient};
@@ -11,12 +11,12 @@ use crate::error::{Error, Kind};
 use prost::DecodeError;
 
 #[derive(Serialize, Deserialize)]
-pub struct NodeInfoResponse {
+ struct NodeInfoResponse {
     pub node_info: NodeInfo
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NodeInfo {
+ struct NodeInfo {
     pub id: String,
     pub network: String
 }
@@ -80,9 +80,9 @@ impl ChainConfig {
 }
 
 #[doc = r"Returns the node info such as network moniker. Currently using LCD endpoint"]
-fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, String> {
+async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, String> {
     let endpoint = format!("{}{}", lcd_address, "/node_info");
-    let result = get(&endpoint);
+    let result = get(&endpoint).await;
 
     // checking if the response is good
     let response = match result {
@@ -94,7 +94,7 @@ fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, String> {
     match response.status() {
         StatusCode::OK => {
             // unwrap here is safe since we already knew that the response is good
-            node_info_response = response.json::<NodeInfoResponse>().unwrap()
+            node_info_response = response.json::<NodeInfoResponse>().await.unwrap()
         },
         status_code => return Err(status_code.to_string())
     }
@@ -107,10 +107,10 @@ fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, String> {
 mod tests {
     use super::*;
 
-    #[test]
-    fn get_node_info_works() {
+    #[actix_rt::test]
+    async fn get_node_info_works() {
         let endpoint = "http://localhost:1317";
-        let res = get_node_info(endpoint.to_string());
+        let res = get_node_info(endpoint.to_string()).await;
         match res {
             Ok(node_response) => assert_ne!(node_response.node_info.network.len(), 0),
             Err(err) => assert_eq!(err, "error sending request for url (http://localhost:1317/node_info): error trying to connect: tcp connect error: Connection refused (os error 61)")
@@ -121,8 +121,11 @@ mod tests {
     async fn get_account_data_works() {
         let grpc_endpoint = "http://localhost:9090";
         let lcd_endpoint = "http://localhost:1317";
-        let address = "desmos1aldpews9ngzrt7eagwvwcvny4s7wp23d5wfzck";
-        let node_info = get_node_info(lcd_endpoint.to_string()).unwrap().node_info;
+        let address = "desmos1jgta2lsjq9zln4jgv8hxslg3hdghmvrx9dq3e6";
+        let node_info = get_node_info(lcd_endpoint.to_string())
+            .await
+            .unwrap()
+            .node_info;
 
         let chain_config = ChainConfig::new(
             node_info,
