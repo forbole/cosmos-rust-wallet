@@ -1,4 +1,4 @@
-//! This file defines the various errors raised by the signer
+//! This file defines the various errors raised by the cosmos signer
 use thiserror::Error;
 
 /// Various kinds of errors that can be raised by the signer

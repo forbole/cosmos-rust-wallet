@@ -1,26 +1,32 @@
+use crate::error::{Error};
+use cosmos_sdk_proto::cosmos::auth::v1beta1::{
+    QueryAccountRequest,
+    QueryAccountResponse,
+    BaseAccount,
+    query_client::{QueryClient}
+};
+use prost::DecodeError;
+use reqwest::{StatusCode, get};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str};
-use reqwest::{StatusCode, get};
-use cosmos_sdk_proto::cosmos::auth::v1beta1::{QueryAccountRequest, BaseAccount};
-use cosmos_sdk_proto::cosmos::auth::v1beta1::QueryAccountResponse;
-use cosmos_sdk_proto::cosmos::auth::v1beta1::query_client::{QueryClient};
-use std::any::Any;
+use std::{any::Any, io::Bytes};
 use tonic::codegen::http::Uri;
-use std::io::Bytes;
-use crate::error::{Error};
-use prost::DecodeError;
 
 #[derive(Serialize, Deserialize)]
+/// Response of /node_info query
  struct NodeInfoResponse {
     pub node_info: NodeInfo
 }
 
 #[derive(Serialize, Deserialize)]
+/// NodeInfo represent some basics full node info
 pub struct NodeInfo {
     pub id: String,
     pub network: String
 }
 
+
+/// ChainConfig represent the configuration of a full node
 pub struct ChainConfig {
     pub node_info: NodeInfo,
     pub grpc_addr: String,
@@ -36,7 +42,7 @@ impl ChainConfig {
         }
     }
 
-    #[doc = r"Returns the account data associated with the given address"]
+    /// Returns the account data associated with the given address
     pub async fn get_account_data(&self, address: String) -> Result<BaseAccount, Error>  {
         /// TODO move this externally to create it one time only
         // creating channel connection to the gRPC server
@@ -77,8 +83,8 @@ impl ChainConfig {
 
 }
 
-#[doc = r"Returns the node info such as network moniker. Currently using LCD endpoint"]
-async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Error> {
+/// Returns the node info such as network moniker. Currently using LCD endpoint
+async pub fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Error> {
     let endpoint = format!("{}{}", lcd_address, "/node_info");
     let response = get(&endpoint)
         .await
