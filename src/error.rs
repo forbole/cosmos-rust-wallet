@@ -7,6 +7,9 @@ pub enum Error {
     #[error("GRPC error: {0}")]
     Grpc(String),
 
+    #[error("encoding error: {0]")]
+    Encoding(String),
+
     #[error("decoding error: {0}")]
     Decode(String),
 

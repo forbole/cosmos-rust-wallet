@@ -1,4 +1,4 @@
-use crate::error::{Error};
+use std::{any::Any, io::Bytes};
 use cosmos_sdk_proto::cosmos::auth::v1beta1::{
     QueryAccountRequest,
     QueryAccountResponse,
@@ -9,8 +9,8 @@ use prost::DecodeError;
 use reqwest::{StatusCode, get};
 use serde::{Deserialize, Serialize};
 use serde_json::{from_str};
-use std::{any::Any, io::Bytes};
 use tonic::codegen::http::Uri;
+use crate::error::{Error};
 
 #[derive(Serialize, Deserialize)]
 /// Response of /node_info query
@@ -84,7 +84,7 @@ impl ChainConfig {
 }
 
 /// Returns the node info such as network moniker. Currently using LCD endpoint
-async pub fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Error> {
+pub async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Error> {
     let endpoint = format!("{}{}", lcd_address, "/node_info");
     let response = get(&endpoint)
         .await

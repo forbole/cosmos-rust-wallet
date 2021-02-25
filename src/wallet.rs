@@ -1,5 +1,11 @@
+//! Wallet utility to build & sign transactions on every cosmos-sdk based network
+
+// Includes code originally from ibc-rs:
+// <https://github.com/informalsystems/ibc-rs>
+// Copyright © 2020 Informal Systems Inc.
+// Licensed under the Apache 2.0 license
+
 use std::convert::TryFrom;
-use crate::error::{Error};
 use bech32::{ToBase32, Variant::Bech32};
 use bitcoin::{
     network::constants::Network,
@@ -13,6 +19,19 @@ use crypto::{
     ripemd160::Ripemd160,
     sha2::Sha256
 };
+
+use cosmos_tx::{
+    Builder,
+    msg::Msg
+};
+use tendermint::block;
+use k256::{ecdsa::{signature::Signer, Signature, SigningKey}};
+use crate::error::{Error};
+use crate::rpc::ChainConfig;
+use cosmos_sdk_proto::cosmos::auth::v1beta1::BaseAccount;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::{Fee, TxBody, ModeInfo, SignerInfo, AuthInfo};
+use prost_types::Any;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::mode_info::{Single, Sum};
 
 
 /// Keychain contains a pair of Secp256k1 keys.
@@ -50,6 +69,68 @@ impl Wallet {
         };
 
         Ok(wallet)
+    }
+
+    pub fn sign_tx(
+        &self,
+        account: BaseAccount,
+        chain_config: ChainConfig,
+        msgs: &[Msg],
+        fee: Fee,
+        memo: Option<String>,
+        timeout_height: u64
+    ) -> Result<Vec<u8>, Error>  {
+        // create the transaction signing key from the private_key
+        let private_key_bytes = self.keychain.ext_private_key.private_key.to_bytes();
+        let signing_key = SigningKey::from_bytes(private_key_bytes.as_slice()).unwrap();
+
+        let memo = match memo {
+            None => "".to_string(),
+            Some(mem) => mem,
+        };
+
+        // Create tx body
+        let tx_body = TxBody {
+            messages: msgs,
+            memo: memo,
+            timeout_height: timeout_height,
+            extension_options: Vec::<Any>::new(),
+            non_critical_extension_options: Vec::<Any>::new(),
+        };
+
+        // Serializing tx body into protobuf
+        let mut tx_body_buffer = Vec::new();
+        prost::Message::encode(&tx_body, &mut tx_body_buffer)
+            .map_err(| err | Error::Encoding(err.to_string()))?;
+
+        // Serializing public key into protobuf
+        let mut pk_buffer = Vec::new();
+        prost::Message::encode(&self.keychain.ext_public_key.public_key.to_bytes(), &mut pk_buffer)
+            .map_err(| err | Error::Encoding(err.to_string()))?;
+
+        // TODO extract a better key type
+        let public_key_any = Any {
+            type_url: "/cosmos.crypto.secp256k1.PubKey".to_string(),
+            value: pk_buffer,
+        };
+
+        let single = Single { mode: 1 };
+        let sum_single = Some(Sum::Single(single));
+        let broadcast_mode = Some(ModeInfo { sum: sum_single });
+        let signer_info = SignerInfo {
+            public_key: Some(public_key_any),
+            mode_info: broadcast_mode,
+            sequence: account.sequence,
+        };
+
+        let auth_info = AuthInfo{
+            signer_infos: vec![signer_info],
+            fee: Some(fee)
+        };
+
+
+
+
     }
 }
 

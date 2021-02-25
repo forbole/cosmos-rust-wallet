@@ -1,4 +1,4 @@
-use crate::wallet::{
+/*use crate::wallet::{
  Wallet
 };
 
@@ -21,4 +21,4 @@ pub fn import_wallet(grpc_address: String, lcd_address: String, mnemonic: String
  let account_data = chain_config.get_account_data(wallet.bech32_address).await.unwrap();
 
 
-}
+}*/
