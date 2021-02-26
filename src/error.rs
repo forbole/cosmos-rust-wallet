@@ -7,7 +7,7 @@ pub enum Error {
     #[error("GRPC error: {0}")]
     Grpc(String),
 
-    #[error("encoding error: {0]")]
+    #[error("encoding error: {0}")]
     Encoding(String),
 
     #[error("decoding error: {0}")]
@@ -23,5 +23,5 @@ pub enum Error {
     PrivateKey(String),
 
     #[error("Bech 32 encoding error: {0}")]
-    Bech32(String)
+    Bech32(String),
 }

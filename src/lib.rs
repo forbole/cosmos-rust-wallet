@@ -1,4 +1,7 @@
-mod wallet;
-mod rpc;
 mod error;
+mod msg;
+mod rpc;
 mod signer;
+mod wallet;
+mod proto_gen;
+
