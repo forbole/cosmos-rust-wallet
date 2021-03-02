@@ -15,13 +15,13 @@ use cosmos_sdk_proto::cosmos::tx::v1beta1::{
     BroadcastMode, BroadcastTxRequest, BroadcastTxResponse, TxRaw,
 };
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 /// Response of /node_info query
 pub struct NodeInfoResponse {
     pub node_info: NodeInfo,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 /// NodeInfo represent some basics full node info
 pub struct NodeInfo {
     pub id: String,
@@ -29,6 +29,7 @@ pub struct NodeInfo {
 }
 
 /// ChainConfig represent the configuration of a full node
+#[derive(Clone)]
 pub struct ChainClient {
     pub node_info: NodeInfo,
     pub grpc_addr: String,
@@ -134,6 +135,13 @@ pub async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Erro
 mod tests {
     use super::*;
     use crate::error::Error;
+    use crate::wallet::Wallet;
+    use cosmos_sdk_proto::cosmos::{
+        base::v1beta1::Coin,
+        tx::v1beta1::Fee,
+        bank::v1beta1::MsgSend
+    };
+    use crate::msg::Msg;
 
     #[actix_rt::test]
     async fn get_node_info_works() {
@@ -168,5 +176,68 @@ mod tests {
             Ok(response) => assert_eq!(response.address, address),
             Err(err) => assert_eq!(err, exp_err),
         };
+    }
+
+    #[actix_rt::test]
+    async fn broadcast_tx_works() {
+        let wallet = Wallet::from_mnemonic(
+            "battle call once stool three mammal hybrid list sign field athlete amateur cinnamon eagle shell erupt voyage hero assist maple matrix maximum able barrel",
+            "m/44'/852'/0'/0/0".to_string(),
+            "desmos".to_string(),
+        ).unwrap();
+
+        let lcd_endpoint = "http://localhost:1317";
+        let node_info = get_node_info(lcd_endpoint.to_string())
+            .await
+            .unwrap()
+            .node_info;
+        let grpc_endpoint = "http://localhost:9090";
+        let chain_client = ChainClient::new(node_info, lcd_endpoint.to_string(), grpc_endpoint.to_string());
+
+        let account = chain_client.get_account_data(wallet.bech32_address.clone())
+            .await
+            .unwrap();
+
+        // Gas Fee
+        let coin = Coin {
+            denom: "stake".to_string(),
+            amount: "5000".to_string(),
+        };
+
+        let fee = Fee {
+            amount: vec![coin],
+            gas_limit: 300000,
+            payer: "".to_string(),
+            granter: "".to_string(),
+        };
+
+        let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
+        let msg = MsgSend{
+            from_address: wallet.bech32_address.clone(),
+            to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
+            amount: vec![amount]
+        };
+
+        let mut msg_bytes =  Vec::new();
+        prost::Message::encode(&msg, &mut msg_bytes).unwrap();
+
+        let proto_msg = Msg::new(
+            "/cosmos.bank.v1beta1.Msg/Send",
+            msg_bytes
+        );
+
+        let tx_signed_bytes = wallet.sign_tx(account, chain_client.clone(), &[proto_msg], fee, None, 0)
+            .unwrap();
+
+        let res = chain_client.broadcast_tx_gRPC(tx_signed_bytes, BroadcastMode::Block)
+            .await.unwrap();
+
+        let tx_height = res.height.clone();
+        let code = res.code.clone();
+        let code_space = res.codespace.clone();
+        let raw_log = res.raw_log.clone();
+
+
+        assert_ne!(tx_height, 0)
     }
 }
