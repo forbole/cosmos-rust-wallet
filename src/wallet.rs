@@ -8,12 +8,12 @@
 use std::convert::TryFrom;
 
 use bech32::{ToBase32, Variant::Bech32};
+use bip39::{Language, Mnemonic, Seed};
 use bitcoin::{
     network::constants::Network,
     secp256k1::Secp256k1,
     util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey},
 };
-use bitcoin_wallet::{account::Seed, mnemonic::Mnemonic};
 use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::BaseAccount,
     tx::v1beta1::{
@@ -21,10 +21,11 @@ use cosmos_sdk_proto::cosmos::{
         AuthInfo, Fee, ModeInfo, SignDoc, SignerInfo, TxBody, TxRaw,
     },
 };
-use crypto::{digest::Digest, ripemd160::Ripemd160, sha2::Sha256};
 use hdpath::StandardHDPath;
 use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use prost_types::Any;
+use ripemd160::Ripemd160;
+use sha2::{Digest, Sha256};
 
 use crate::error::Error;
 use crate::msg::Msg;
@@ -52,8 +53,9 @@ impl Wallet {
     ) -> Result<Wallet, Error> {
         // Create mnemonic and generate seed from it
         let mnemonic =
-            Mnemonic::from_str(mnemonic_words).map_err(|err| Error::Mnemonic(err.to_string()))?;
-        let seed = mnemonic.to_seed(Some(""));
+            Mnemonic::from_phrase(mnemonic_words, Language::English)
+                .map_err(|err| Error::Mnemonic(err.to_string()))?;
+        let seed = Seed::new(&mnemonic, "");
 
         // Set hd_path for master_key generation
         let hd_path = StandardHDPath::try_from(derivation_path.as_str()).unwrap();
@@ -171,7 +173,7 @@ impl Wallet {
 
 /// generate a keychain of Secp256k1 keys from the given hd_path and seed.
 fn generate_keychain(hd_path: StandardHDPath, seed: Seed) -> Result<Keychain, Error> {
-    let private_key = ExtendedPrivKey::new_master(Network::Bitcoin, &seed.0)
+    let private_key = ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes())
         .and_then(|priv_key| {
             priv_key.derive_priv(&Secp256k1::new(), &DerivationPath::from(hd_path))
         })
@@ -194,16 +196,18 @@ fn generate_keychain(hd_path: StandardHDPath, seed: Seed) -> Result<Keychain, Er
 ///    e.g
 ///    ripemd160(sha256(compressed_pub_key))
 fn bech32_address_from_public_key(pub_key: ExtendedPubKey, hrp: String) -> Result<String, Error> {
-    let mut sha256_digest = Sha256::new();
-    sha256_digest.input(pub_key.public_key.to_bytes().as_slice());
-    let mut sha256_bytes = vec![0; sha256_digest.output_bytes()];
-    sha256_digest.result(&mut sha256_bytes);
+    let mut hasher = Sha256::new();
+    hasher.update(pub_key.public_key.to_bytes().as_slice());
 
-    let mut ripdem_hash = Ripemd160::new();
-    ripdem_hash.input(sha256_bytes.as_slice());
-    let mut address_bytes = vec![0; ripdem_hash.output_bytes()];
-    ripdem_hash.result(&mut address_bytes);
-    address_bytes.to_vec();
+    // Read hash digest over the public key bytes & consume hasher
+    let pk_hash = hasher.finalize();
+
+    // Insert the hash result in the ripdem hash function
+    let mut rip_hasher = Ripemd160::new();
+    rip_hasher.update(pk_hash);
+    let rip_result = rip_hasher.finalize();
+
+    let address_bytes = rip_result.to_vec();
 
     let bech32_address = bech32::encode(hrp.as_str(), address_bytes.to_base32(), Bech32)
         .map_err(|err| Error::Bech32(err.to_string()))?;
@@ -241,8 +245,8 @@ mod tests {
     impl TestData {
         fn setup_test(derivation_path: &str, mnemonic_words: &str) -> TestData {
             let hd_path = StandardHDPath::try_from(derivation_path).unwrap();
-            let mnemonic = Mnemonic::from_str(mnemonic_words).unwrap();
-            let seed = mnemonic.to_seed(Some(""));
+            let mnemonic = Mnemonic::from_phrase(mnemonic_words, Language::English).unwrap();
+            let seed = Seed::new(&mnemonic, "");
             TestData { hd_path, seed }
         }
     }

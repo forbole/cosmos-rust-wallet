@@ -143,6 +143,55 @@ mod tests {
     };
     use crate::msg::Msg;
 
+    struct TestData {
+        chain_client: ChainClient,
+        proto_msg: Msg,
+        fee: Fee,
+    }
+
+    async fn setup_test(lcd_endpoint: &str, grpc_endpoint: &str, address: String) -> TestData {
+        let node_info = get_node_info(lcd_endpoint.to_string())
+            .await
+            .unwrap()
+            .node_info;
+
+        let chain_client = ChainClient::new(
+            node_info,
+            lcd_endpoint.to_string(),
+            grpc_endpoint.to_string()
+        );
+
+        // Gas Fee
+        let coin = Coin {
+            denom: "stake".to_string(),
+            amount: "5000".to_string(),
+        };
+
+        let fee = Fee {
+            amount: vec![coin],
+            gas_limit: 300000,
+            payer: "".to_string(),
+            granter: "".to_string(),
+        };
+
+        let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
+        let msg = MsgSend{
+            from_address: address,
+            to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
+            amount: vec![amount]
+        };
+
+        let mut msg_bytes =  Vec::new();
+        prost::Message::encode(&msg, &mut msg_bytes).unwrap();
+
+        let proto_msg = Msg::new(
+            "/cosmos.bank.v1beta1.Msg/Send",
+            msg_bytes
+        );
+
+        TestData{ chain_client, proto_msg, fee }
+    }
+
     #[actix_rt::test]
     async fn get_node_info_works() {
         let endpoint = "http://localhost:1317";
@@ -186,58 +235,33 @@ mod tests {
             "desmos".to_string(),
         ).unwrap();
 
-        let lcd_endpoint = "http://localhost:1317";
-        let node_info = get_node_info(lcd_endpoint.to_string())
-            .await
-            .unwrap()
-            .node_info;
-        let grpc_endpoint = "http://localhost:9090";
-        let chain_client = ChainClient::new(node_info, lcd_endpoint.to_string(), grpc_endpoint.to_string());
+        let test_data = setup_test(
+            "http://localhost:1317",
+            "http://localhost:9090",
+            wallet.bech32_address.clone()
+        ).await;
 
-        let account = chain_client.get_account_data(wallet.bech32_address.clone())
+        let account = test_data.chain_client
+            .get_account_data(wallet.bech32_address.clone())
             .await
             .unwrap();
 
-        // Gas Fee
-        let coin = Coin {
-            denom: "stake".to_string(),
-            amount: "5000".to_string(),
-        };
+        let tx_signed_bytes = wallet.sign_tx(
+            account,
+            test_data.chain_client.clone(),
+            &[test_data.proto_msg], test_data.fee,
+            None,
+            0
+        ).unwrap();
 
-        let fee = Fee {
-            amount: vec![coin],
-            gas_limit: 300000,
-            payer: "".to_string(),
-            granter: "".to_string(),
-        };
-
-        let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
-        let msg = MsgSend{
-            from_address: wallet.bech32_address.clone(),
-            to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
-            amount: vec![amount]
-        };
-
-        let mut msg_bytes =  Vec::new();
-        prost::Message::encode(&msg, &mut msg_bytes).unwrap();
-
-        let proto_msg = Msg::new(
-            "/cosmos.bank.v1beta1.Msg/Send",
-            msg_bytes
-        );
-
-        let tx_signed_bytes = wallet.sign_tx(account, chain_client.clone(), &[proto_msg], fee, None, 0)
-            .unwrap();
-
-        let res = chain_client.broadcast_tx_gRPC(tx_signed_bytes, BroadcastMode::Block)
+        let res = test_data.chain_client.broadcast_tx_gRPC(tx_signed_bytes, BroadcastMode::Block)
             .await.unwrap();
 
-        let tx_height = res.height.clone();
-        let code = res.code.clone();
-        let code_space = res.codespace.clone();
-        let raw_log = res.raw_log.clone();
+        let tx_height = res.height;
+        let code = res.code;
+        let code_space = res.codespace;
+        let raw_log = res.raw_log;
 
-
-        assert_ne!(tx_height, 0)
+        assert_eq!(code, 0)
     }
 }
