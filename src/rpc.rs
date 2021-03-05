@@ -1,4 +1,3 @@
-use std::{any::Any, io::Bytes};
 use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::{
         query_client::QueryClient, BaseAccount, QueryAccountRequest,
@@ -6,12 +5,11 @@ use cosmos_sdk_proto::cosmos::{
     base::abci::v1beta1::TxResponse,
     tx::v1beta1::{
         service_client::ServiceClient,
-        BroadcastMode, BroadcastTxRequest, BroadcastTxResponse, TxRaw,
+        BroadcastMode, BroadcastTxRequest,
     }
 };
 use reqwest::{get, StatusCode};
 use serde::{Deserialize, Serialize};
-use serde_json::from_str;
 use tonic::{codegen::http::Uri, transport::Channel, Request};
 use crate::error::Error;
 
@@ -25,6 +23,7 @@ pub struct NodeInfoResponse {
 /// NodeInfo represent some basics full node info
 pub struct NodeInfo {
     pub id: String,
+    //pub version: String,
     pub network: String,
 }
 
@@ -141,11 +140,11 @@ mod tests {
         tx::v1beta1::Fee,
         bank::v1beta1::MsgSend
     };
-    use crate::msg::Msg;
+    use prost_types::Any;
 
     struct TestData {
         chain_client: ChainClient,
-        proto_msg: Msg,
+        msgs: Vec<Any>,
         fee: Fee,
     }
 
@@ -184,12 +183,14 @@ mod tests {
         let mut msg_bytes =  Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
-        let proto_msg = Msg::new(
-            "/cosmos.bank.v1beta1.Msg/Send",
-            msg_bytes
-        );
+        let proto_msg = Any {
+            type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
+            value: msg_bytes
+        };
 
-        TestData{ chain_client, proto_msg, fee }
+        let msgs = vec![proto_msg];
+
+        TestData{ chain_client, msgs, fee }
     }
 
     #[actix_rt::test]
@@ -249,7 +250,7 @@ mod tests {
         let tx_signed_bytes = wallet.sign_tx(
             account,
             test_data.chain_client.clone(),
-            &[test_data.proto_msg], test_data.fee,
+            test_data.msgs, test_data.fee,
             None,
             0
         ).unwrap();
@@ -262,6 +263,6 @@ mod tests {
         let code_space = res.codespace;
         let raw_log = res.raw_log;
 
-        assert_eq!(code, 0)
+        assert_eq!(code, 0);
     }
 }

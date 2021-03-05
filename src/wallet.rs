@@ -25,9 +25,10 @@ use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use prost_types::Any;
 use ripemd160::Ripemd160;
 use sha2::{Digest, Sha256};
-use crate::error::Error;
-use crate::msg::Msg;
-use crate::rpc::ChainClient;
+use crate::{
+    error::Error,
+    rpc::ChainClient,
+};
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -74,7 +75,7 @@ impl Wallet {
         &self,
         account: BaseAccount,
         chain_client: ChainClient,
-        msgs: &[Msg],
+        msgs: Vec<Any>,
         fee: Fee,
         memo: Option<String>,
         timeout_height: u64,
@@ -87,7 +88,7 @@ impl Wallet {
 
         // Create tx body
         let tx_body = TxBody {
-            messages: msgs.iter().map(|msg| msg.0.clone()).collect(),
+            messages: msgs.to_vec(),
             memo: memo,
             timeout_height: timeout_height,
             extension_options: Vec::<Any>::new(),
@@ -140,7 +141,7 @@ impl Wallet {
         let sign_doc = SignDoc {
             body_bytes: tx_body_buffer.clone(),
             auth_info_bytes: auth_buffer.clone(),
-            chain_id: chain_client.node_info.id,
+            chain_id: chain_client.node_info.network,
             account_number: account.account_number,
         };
 
@@ -372,12 +373,14 @@ mod tests {
         let mut msg_bytes =  Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
-        let proto_msg = Msg::new(
-            "/cosmos.bank.v1beta1.Msg/Send",
-            msg_bytes
-        );
+        let proto_msg = Any {
+            type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
+            value: msg_bytes
+        };
 
-        let tx_signed_bytes = wallet.sign_tx(account, chain_client, &[proto_msg], fee, None, 0)
+        let msgs = vec![proto_msg];
+
+        let tx_signed_bytes = wallet.sign_tx(account, chain_client, msgs.to_vec(), fee, None, 0)
             .unwrap();
 
         let tx_raw: TxRaw = prost::Message::decode(tx_signed_bytes.as_slice()).unwrap();
