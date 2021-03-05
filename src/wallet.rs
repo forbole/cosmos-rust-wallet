@@ -24,11 +24,13 @@ use hdpath::StandardHDPath;
 use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use prost_types::Any;
 use ripemd160::Ripemd160;
+use serde::{Serialize, Deserialize};
 use sha2::{Digest, Sha256};
 use crate::{
     error::Error,
     rpc::ChainClient,
 };
+use wasm_bindgen::prelude::*;
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -40,6 +42,14 @@ pub struct Keychain {
 /// to a BIP-32 mnemonic.
 pub struct Wallet {
     pub keychain: Keychain,
+    pub bech32_address: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "camelCase")]
+pub struct WalletJS {
+    pub public_key: String,
+    pub private_key: String,
     pub bech32_address: String,
 }
 
@@ -69,6 +79,15 @@ impl Wallet {
         };
 
         Ok(wallet)
+    }
+
+    /// convert the wallet to a valid object for Javascript
+    pub fn to_js_wallet(&self) -> WalletJS {
+        WalletJS{
+            public_key: self.keychain.ext_public_key.to_string(),
+            private_key: self.keychain.ext_private_key.to_string(),
+            bech32_address: self.bech32_address.clone()
+        }
     }
 
     pub fn sign_tx(

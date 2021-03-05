@@ -1,3 +1,4 @@
+use wasm_bindgen::prelude::*;
 use crate::{
     rpc::{
         ChainClient,
@@ -7,15 +8,25 @@ use crate::{
         Wallet
     }
 };
+use crate::rpc::NodeInfoResponse;
+use crate::error::Error;
+use crate::wallet::WalletJS;
 
 /// Import a wallet from the given mnemonic
-pub fn import_wallet(grpc_address: String, lcd_address: String, mnemonic: String, derivation_path: String, hrp: String) -> Wallet {
- let response = get_node_info(lcd_address).await?;
- let chain_config = ChainClient::new(
-     response.node_info,
-     lcd_address.clone(),
-     grpc_address
- );
+#[wasm_bindgen(js_name = "importWallet")]
+pub fn import_wallet(mnemonic: &str, derivation_path: &str, hrp: &str) -> Result<JsValue, JsValue> {
+ let wallet = Wallet::from_mnemonic(
+     mnemonic,
+     derivation_path.to_string(),
+     hrp.to_string()
+ )
+     .map_err(| error | JsValue::from_serde(&error).unwrap())?
+     .to_js_wallet();
 
- let wallet = Wallet::from_mnemonic(mnemonic.as_str(), derivation_path, hrp).unwrap();
+ Ok(JsValue::from_serde(&wallet).unwrap())
+}
+
+/// Sign and send a transaction with the given wallet
+pub fn sign_and_send_tx(wallet: &JsValue, msg: &JsValue, lcd_addr: &str, grpc_addr: &str) -> Result<JsValue, JsValue> {
+    // TODO
 }

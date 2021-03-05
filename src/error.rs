@@ -1,8 +1,9 @@
 //! This file defines the various errors raised by the cosmos signer
 use thiserror::Error;
+use serde::{Serialize, Deserialize};
 
 /// Various kinds of errors that can be raised by the signer
-#[derive(Error, Debug, Clone, PartialEq)]
+#[derive(Error, Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum Error {
     #[error("GRPC error: {0}")]
     Grpc(String),
