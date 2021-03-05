@@ -6,7 +6,6 @@
 // Licensed under the Apache 2.0 license
 
 use std::convert::TryFrom;
-
 use bech32::{ToBase32, Variant::Bech32};
 use bip39::{Language, Mnemonic, Seed};
 use bitcoin::{
@@ -26,7 +25,6 @@ use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use prost_types::Any;
 use ripemd160::Ripemd160;
 use sha2::{Digest, Sha256};
-
 use crate::error::Error;
 use crate::msg::Msg;
 use crate::rpc::ChainClient;

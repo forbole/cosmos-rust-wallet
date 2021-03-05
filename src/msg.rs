@@ -1,5 +1,4 @@
 //! Transaction Message representation
-
 use prost_types::Any;
 
 /// Transaction messages
