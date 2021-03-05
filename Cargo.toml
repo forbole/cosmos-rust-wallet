@@ -28,8 +28,6 @@ k256 = { version = "0.7.2", features = ["ecdsa-core", "ecdsa", "sha256"]}
 
 [dev-dependencies]
 actix-rt = "2.0.2"
-protoc-rust = "2.22.0"
-k256 = { version = "0.7.2", features = ["ecdsa-core", "ecdsa", "sha256"]}
 
 [patch.crates-io]
 cosmos-sdk-proto = { git = "https://github.com/forbole/cosmos-rust", branch = "main"}
