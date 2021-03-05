@@ -3,7 +3,7 @@ use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::{
         query_client::QueryClient, BaseAccount, QueryAccountRequest,
     },
-    base::abci::v1beta1::TxResponse;
+    base::abci::v1beta1::TxResponse,
     tx::v1beta1::{
         service_client::ServiceClient,
         BroadcastMode, BroadcastTxRequest, BroadcastTxResponse, TxRaw,
