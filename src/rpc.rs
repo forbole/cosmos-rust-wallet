@@ -1,3 +1,5 @@
+//! This file contains all the methods to fetch data from a cosmos-sdk-based full node
+
 use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::{
         query_client::QueryClient, BaseAccount, QueryAccountRequest,
@@ -23,11 +25,10 @@ pub struct NodeInfoResponse {
 /// NodeInfo represent some basics full node info
 pub struct NodeInfo {
     pub id: String,
-    //pub version: String,
     pub network: String,
 }
 
-/// ChainConfig represent the configuration of a full node
+/// ChainClient is the source to communicate with a full node
 #[derive(Clone)]
 pub struct ChainClient {
     pub node_info: NodeInfo,

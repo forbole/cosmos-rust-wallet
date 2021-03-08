@@ -47,6 +47,7 @@ pub struct Wallet {
     pub bech32_address: String,
 }
 
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct WalletJS {
@@ -185,10 +186,10 @@ impl Wallet {
 /// From trait implementation for Wallet <-> WalletJS
 /// This trait perform a smooth conversion between those two types
 impl From<WalletJS> for Wallet {
-    fn from(wallet: WalletJS) -> Self {
-        let private_key = ExtendedPrivKey::from_str(wallet.private_key.as_str()).unwrap();
-        let public_key = ExtendedPubKey::from_str(wallet.public_key.as_str()).unwrap();
-        Wallet{ keychain: Keychain{ext_private_key: private_key, ext_public_key: public_key}, bech32_address: wallet.bech32_address }
+    fn from(wallet_js: WalletJS) -> Self {
+        let private_key = ExtendedPrivKey::from_str(wallet_js.private_key.as_str()).unwrap();
+        let public_key = ExtendedPubKey::from_str(wallet_js.public_key.as_str()).unwrap();
+        Wallet{ keychain: Keychain{ext_private_key: private_key, ext_public_key: public_key}, bech32_address: wallet_js.bech32_address }
     }
 }
 
@@ -257,8 +258,10 @@ fn sign_bytes(ext_private_key: ExtendedPrivKey, bytes_to_sign: Vec<u8>) -> Signa
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
-    use crate::rpc::get_node_info;
+    use crate::{
+        error::Error,
+        rpc::get_node_info
+    };
     use cosmos_sdk_proto::cosmos::{
         base::v1beta1::Coin,
         bank::v1beta1::MsgSend

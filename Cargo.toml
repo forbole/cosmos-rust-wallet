@@ -12,6 +12,7 @@ tonic = { version = "0.4.0"}
 prost = { version = "0.7.0"}
 prost-types = {version = "0.7"}
 wasm-bindgen = { version = "0.2.70", features = ["serde-serialize"]}
+wasm-bindgen-futures = { version = "0.4.21"}
 wasm-bindgen-test = "0.3.20"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.62" }
@@ -28,6 +29,7 @@ k256 = { version = "0.7.2", features = ["ecdsa-core", "ecdsa", "sha256"]}
 
 [dev-dependencies]
 actix-rt = "2.0.2"
+wasm-bindgen-test = "0.3.21"
 
 [patch.crates-io]
 cosmos-sdk-proto = { git = "https://github.com/forbole/cosmos-rust", branch = "main"}

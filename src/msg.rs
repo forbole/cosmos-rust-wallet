@@ -1,5 +1,12 @@
 //! Transaction Message representation
 use prost_types::Any;
+use serde::{Serialize, Deserialize};
+
+#[derive(Serialize, Deserialize)]
+pub struct AnyWrapper {
+    pub type_url: String,
+    pub value: Vec<u8>
+}
 
 /// Transaction message wrapper
 pub struct Msg(pub(crate) Any);
@@ -22,5 +29,11 @@ impl From<Any> for Msg {
 impl From<Msg> for Any {
     fn from(msg: Msg) -> Any {
         msg.0
+    }
+}
+
+impl From<AnyWrapper> for Any {
+    fn from(any_wrap: AnyWrapper) -> Any {
+        Any{ type_url: any_wrap.type_url, value: any_wrap.value }
     }
 }
