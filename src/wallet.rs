@@ -29,8 +29,10 @@ use sha2::{Digest, Sha256};
 use crate::{
     error::Error,
     rpc::ChainClient,
+    msg::Msg
 };
 use wasm_bindgen::prelude::*;
+use bitcoin::hashes::core::str::FromStr;
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -81,20 +83,11 @@ impl Wallet {
         Ok(wallet)
     }
 
-    /// convert the wallet to a valid object for Javascript
-    pub fn to_js_wallet(&self) -> WalletJS {
-        WalletJS{
-            public_key: self.keychain.ext_public_key.to_string(),
-            private_key: self.keychain.ext_private_key.to_string(),
-            bech32_address: self.bech32_address.clone()
-        }
-    }
-
     pub fn sign_tx(
         &self,
         account: BaseAccount,
         chain_client: ChainClient,
-        msgs: Vec<Any>,
+        msgs: Vec<Msg>,
         fee: Fee,
         memo: Option<String>,
         timeout_height: u64,
@@ -107,7 +100,7 @@ impl Wallet {
 
         // Create tx body
         let tx_body = TxBody {
-            messages: msgs.to_vec(),
+            messages: msgs.iter().map(| msg | msg.0.clone()).collect(),
             memo: memo,
             timeout_height: timeout_height,
             extension_options: Vec::<Any>::new(),
@@ -186,6 +179,26 @@ impl Wallet {
             .map_err(|err| Error::Encoding(err.to_string()))?;
 
         Ok(tx_signed_bytes)
+    }
+}
+
+/// From trait implementation for Wallet <-> WalletJS
+/// This trait perform a smooth conversion between those two types
+impl From<WalletJS> for Wallet {
+    fn from(wallet: WalletJS) -> Self {
+        let private_key = ExtendedPrivKey::from_str(wallet.private_key.as_str()).unwrap();
+        let public_key = ExtendedPubKey::from_str(wallet.public_key.as_str()).unwrap();
+        Wallet{ keychain: Keychain{ext_private_key: private_key, ext_public_key: public_key}, bech32_address: wallet.bech32_address }
+    }
+}
+
+impl From<Wallet> for WalletJS {
+    fn from(wallet: Wallet) -> Self {
+        WalletJS{
+            public_key: wallet.keychain.ext_public_key.to_string(),
+            private_key: wallet.keychain.ext_private_key.to_string(),
+            bech32_address: wallet.bech32_address
+        }
     }
 }
 
@@ -392,14 +405,14 @@ mod tests {
         let mut msg_bytes =  Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
-        let proto_msg = Any {
+        let proto_msg = Msg(Any {
             type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
             value: msg_bytes
-        };
+        });
 
         let msgs = vec![proto_msg];
 
-        let tx_signed_bytes = wallet.sign_tx(account, chain_client, msgs.to_vec(), fee, None, 0)
+        let tx_signed_bytes = wallet.sign_tx(account, chain_client, msgs, fee, None, 0)
             .unwrap();
 
         let tx_raw: TxRaw = prost::Message::decode(tx_signed_bytes.as_slice()).unwrap();

@@ -133,8 +133,10 @@ pub async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Erro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::error::Error;
-    use crate::wallet::Wallet;
+    use crate::{
+        wallet::Wallet,
+        msg::Msg
+    };
     use cosmos_sdk_proto::cosmos::{
         base::v1beta1::Coin,
         tx::v1beta1::Fee,
@@ -144,7 +146,7 @@ mod tests {
 
     struct TestData {
         chain_client: ChainClient,
-        msgs: Vec<Any>,
+        msgs: Vec<Msg>,
         fee: Fee,
     }
 
@@ -173,7 +175,7 @@ mod tests {
             granter: "".to_string(),
         };
 
-        let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
+        let amount = Coin{ denom: "stake".to_string(), amount: "10".to_string() };
         let msg = MsgSend{
             from_address: address,
             to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
@@ -183,10 +185,10 @@ mod tests {
         let mut msg_bytes =  Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
-        let proto_msg = Any {
+        let proto_msg = Msg(Any {
             type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
             value: msg_bytes
-        };
+        });
 
         let msgs = vec![proto_msg];
 
@@ -258,11 +260,10 @@ mod tests {
         let res = test_data.chain_client.broadcast_tx_gRPC(tx_signed_bytes, BroadcastMode::Block)
             .await.unwrap();
 
-        let tx_height = res.height;
         let code = res.code;
-        let code_space = res.codespace;
         let raw_log = res.raw_log;
 
         assert_eq!(code, 0);
+        print!("{}",raw_log)
     }
 }

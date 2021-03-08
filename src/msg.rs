@@ -1,7 +1,7 @@
 //! Transaction Message representation
 use prost_types::Any;
 
-/// Transaction messages
+/// Transaction message wrapper
 pub struct Msg(pub(crate) Any);
 
 impl Msg {
