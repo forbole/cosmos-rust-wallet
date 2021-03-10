@@ -13,7 +13,10 @@ use cosmos_sdk_proto::cosmos::{
 use reqwest::{get, StatusCode};
 use serde::{Deserialize, Serialize};
 use tonic::{codegen::http::Uri, transport::Channel, Request};
-use crate::error::Error;
+use types::{
+    msg::Msg,
+    error::Error
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 /// Response of /node_info query

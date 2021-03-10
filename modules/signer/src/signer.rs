@@ -1,16 +1,17 @@
 use wasm_bindgen::prelude::*;
-use crate::{
-    rpc::{
-        ChainClient,
-        get_node_info,
-    },
-    wallet::{
-        Wallet,
-        WalletJS
-    },
+use rpc::{
+    client::ChainClient,
+    client::get_node_info,
+};
+use wallet::{
+    crypto::Wallet,
+    crypto::WalletJS
+};
+use types::{
     error::Error,
     msg::{Msg, AnyWrapper}
 };
+
 use cosmos_sdk_proto::cosmos::tx::v1beta1::{Fee, BroadcastMode};
 use prost_types::Any;
 

@@ -26,13 +26,10 @@ use prost_types::Any;
 use ripemd160::Ripemd160;
 use serde::{Serialize, Deserialize};
 use sha2::{Digest, Sha256};
-use crate::{
-    error::Error,
-    rpc::ChainClient,
-    msg::Msg
-};
 use wasm_bindgen::prelude::*;
 use bitcoin::hashes::core::str::FromStr;
+use types::error::Error;
+use types::msg::Msg;
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -111,7 +108,7 @@ impl Wallet {
         // Protobuf tx_body serialization
         let mut tx_body_buffer = Vec::new();
         prost::Message::encode(&tx_body, &mut tx_body_buffer)
-            .map_err(|err| Error::Encoding(err.to_string()))?;
+            .map_err(|err| Error::Encode(err.to_string()))?;
 
         // Protobuf public_key serialization
         let mut pk_buffer = Vec::new();
@@ -119,7 +116,7 @@ impl Wallet {
             &self.keychain.ext_public_key.public_key.to_bytes(),
             &mut pk_buffer,
         )
-        .map_err(|err| Error::Encoding(err.to_string()))?;
+        .map_err(|err| Error::Encode(err.to_string()))?;
 
         // TODO extract a better key type (not an Any type)
         let public_key_any = Any {
@@ -149,7 +146,7 @@ impl Wallet {
         // Protobuf auth_info serialization
         let mut auth_buffer = Vec::new();
         prost::Message::encode(&auth_info, &mut auth_buffer)
-            .map_err(|err| Error::Encoding(err.to_string()))?;
+            .map_err(|err| Error::Encode(err.to_string()))?;
 
         let sign_doc = SignDoc {
             body_bytes: tx_body_buffer.clone(),
@@ -161,7 +158,7 @@ impl Wallet {
         // Protobuf sign_doc serialization
         let mut sign_doc_buffer = Vec::new();
         prost::Message::encode(&sign_doc, &mut sign_doc_buffer)
-            .map_err(|err| Error::Encoding(err.to_string()))?;
+            .map_err(|err| Error::Encode(err.to_string()))?;
 
         // sign the doc buffer
         let signature: Signature = sign_bytes(self.keychain.ext_private_key, sign_doc_buffer);
@@ -177,7 +174,7 @@ impl Wallet {
         // Protobuf tx_raw serialization
         let mut tx_signed_bytes = Vec::new();
         prost::Message::encode(&tx_raw, &mut tx_signed_bytes)
-            .map_err(|err| Error::Encoding(err.to_string()))?;
+            .map_err(|err| Error::Encode(err.to_string()))?;
 
         Ok(tx_signed_bytes)
     }

@@ -9,7 +9,7 @@ pub enum Error {
     Grpc(String),
 
     #[error("encoding error: {0}")]
-    Encoding(String),
+    Encode(String),
 
     #[error("decoding error: {0}")]
     Decode(String),
