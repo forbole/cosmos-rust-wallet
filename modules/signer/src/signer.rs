@@ -1,4 +1,4 @@
-use wasm_bindgen::prelude::*;
+use cosmos_sdk_proto::cosmos::tx::v1beta1::{Fee, BroadcastMode};
 use rpc::{
     client::ChainClient,
     client::get_node_info,
@@ -12,7 +12,8 @@ use types::{
     msg::{Msg, AnyWrapper}
 };
 
-use cosmos_sdk_proto::cosmos::tx::v1beta1::{Fee, BroadcastMode};
+use wasm_bindgen::prelude::*;
+
 use prost_types::Any;
 
 /// Import a wallet from the given mnemonic
@@ -61,7 +62,7 @@ pub async fn sign_and_send_msg(
     let msgs = vec![msg];
     let signed_bytes = wallet.sign_tx(
         account,
-        chain_client.clone(),
+        chain_client.node_info.network.clone(),
         msgs,
         fees,
         Some(memo.to_string()),
@@ -80,7 +81,9 @@ pub async fn sign_and_send_msg(
 #[cfg(test)]
 mod test {
     use crate::signer::import_wallet;
-    use crate::wallet::WalletJS;
+    use wallet::crypto::{
+        WalletJS
+    };
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]

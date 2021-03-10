@@ -6,12 +6,9 @@ edition = "2018"
 license = "Apache 2.0"
 repository = "https://github.com/forbole/cosmos-key-signer"
 
-[lib]
-crate-type = ["cdylib"]
-
 [dependencies]
+prost = { version = "0.7.0"}
+prost-types = {version = "0.7"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.62" }
 thiserror = { version = "1.0.22" }
-prost = { version = "0.7.0"}
-prost-types = {version = "0.7"}

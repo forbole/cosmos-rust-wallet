@@ -26,10 +26,12 @@ use prost_types::Any;
 use ripemd160::Ripemd160;
 use serde::{Serialize, Deserialize};
 use sha2::{Digest, Sha256};
+use std::str::FromStr;
 use wasm_bindgen::prelude::*;
-use bitcoin::hashes::core::str::FromStr;
-use types::error::Error;
-use types::msg::Msg;
+use types::{
+    error::Error,
+    msg::Msg
+};
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -43,7 +45,6 @@ pub struct Wallet {
     pub keychain: Keychain,
     pub bech32_address: String,
 }
-
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
@@ -84,7 +85,7 @@ impl Wallet {
     pub fn sign_tx(
         &self,
         account: BaseAccount,
-        chain_client: ChainClient,
+        chain_id: String,
         msgs: Vec<Msg>,
         fee: Fee,
         memo: Option<String>,
@@ -151,7 +152,7 @@ impl Wallet {
         let sign_doc = SignDoc {
             body_bytes: tx_body_buffer.clone(),
             auth_info_bytes: auth_buffer.clone(),
-            chain_id: chain_client.node_info.network,
+            chain_id: chain_id,
             account_number: account.account_number,
         };
 
@@ -181,7 +182,7 @@ impl Wallet {
 }
 
 /// From trait implementation for Wallet <-> WalletJS
-/// This trait perform a smooth conversion between those two types
+/// This trait perform a smooth conversion between these two types
 impl From<WalletJS> for Wallet {
     fn from(wallet_js: WalletJS) -> Self {
         let private_key = ExtendedPrivKey::from_str(wallet_js.private_key.as_str()).unwrap();
@@ -255,10 +256,6 @@ fn sign_bytes(ext_private_key: ExtendedPrivKey, bytes_to_sign: Vec<u8>) -> Signa
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        error::Error,
-        rpc::get_node_info
-    };
     use cosmos_sdk_proto::cosmos::{
         base::v1beta1::Coin,
         bank::v1beta1::MsgSend
@@ -266,6 +263,10 @@ mod tests {
     use k256::ecdsa::{
         VerifyingKey,
         signature::Verifier
+    };
+    use rpc::{
+        client::ChainClient,
+        get_node_info
     };
 
     struct TestData {
@@ -412,7 +413,14 @@ mod tests {
 
         let msgs = vec![proto_msg];
 
-        let tx_signed_bytes = wallet.sign_tx(account, chain_client, msgs, fee, None, 0)
+        let tx_signed_bytes = wallet.sign_tx(
+            account,
+            chain_client.node_info.network,
+            msgs,
+            fee,
+            None,
+            0
+        )
             .unwrap();
 
         let tx_raw: TxRaw = prost::Message::decode(tx_signed_bytes.as_slice()).unwrap();

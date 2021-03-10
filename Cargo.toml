@@ -20,3 +20,9 @@ overflow-checks = true
 opt-level = 3
 debug = false
 debug-assertions = false
+
+[patch.crates-io]
+cosmos-sdk-proto = { git = "https://github.com/forbole/cosmos-rust", branch = "main"}
+# h2 = { git = "https://github.com/boxdot/h2", branch = "tonic-ws-transport" }
+# tonic = { git = "https://github.com/boxdot/tonic", branch = "tonic-ws-transport" }
+# tower-buffer = { git = "https://github.com/boxdot/tower", branch = "tonic-ws-transport" }

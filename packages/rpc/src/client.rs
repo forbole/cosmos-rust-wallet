@@ -1,4 +1,4 @@
-//! This file contains all the methods to fetch data from a cosmos-sdk-based full node
+//! This file contains all the methods to fetch useful data from a cosmos-sdk-based chain
 
 use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::{
@@ -13,10 +13,7 @@ use cosmos_sdk_proto::cosmos::{
 use reqwest::{get, StatusCode};
 use serde::{Deserialize, Serialize};
 use tonic::{codegen::http::Uri, transport::Channel, Request};
-use types::{
-    msg::Msg,
-    error::Error
-};
+use types::error::Error;
 
 #[derive(Clone, Serialize, Deserialize)]
 /// Response of /node_info query
@@ -58,7 +55,6 @@ impl ChainClient {
             .map_err(|err| Error::Grpc(err.to_string()))?;
 
         // Create gRPC query auth client from channel
-        /// TODO move this externally to create it one time only
         let mut client = QueryClient::new(channel);
 
         // Build a new request
@@ -137,10 +133,10 @@ pub async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Erro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        wallet::Wallet,
+    use types::{
         msg::Msg
     };
+    use wallet::crypto::Wallet;
     use cosmos_sdk_proto::cosmos::{
         base::v1beta1::Coin,
         tx::v1beta1::Fee,
@@ -255,7 +251,7 @@ mod tests {
 
         let tx_signed_bytes = wallet.sign_tx(
             account,
-            test_data.chain_client.clone(),
+            test_data.chain_client.node_info.network.clone(),
             test_data.msgs, test_data.fee,
             None,
             0

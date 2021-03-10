@@ -9,7 +9,7 @@ pub struct AnyWrapper {
 }
 
 /// Transaction message wrapper
-pub struct Msg(pub(crate) Any);
+pub struct Msg(pub Any);
 
 impl Msg {
     pub fn new(type_url: impl Into<String>, value: impl Into<Vec<u8>>) -> Self {

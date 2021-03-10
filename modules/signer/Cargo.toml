@@ -10,34 +10,16 @@ repository = "https://github.com/forbole/cosmos-key-signer"
 crate-type = ["cdylib"]
 
 [dependencies]
-wallet = {path = "../../packages/wallet", version = "0.1.0"}
-types = {path = "../../packages/types", version = "0.1.0"}
-rpc = {path = "../../packages/rpc", version = "0.1.0"}
-bitcoin = { version = "0.26.0" }
-bech32 = { version = "0.8.0" }
 cosmos-sdk-proto = { version = "0.3.0"}
-hdpath = {version = "0.6.0", features = ["with-bitcoin"] }
-k256 = { version = "0.7.2", features = ["ecdsa-core", "ecdsa", "sha256"]}
-reqwest = { version = "0.11.0", features = ["blocking", "json"]}
-ripemd160 = { version = "0.9.1" }
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.62" }
-sha2 = { version = "0.9.3" }
-tiny-bip39 = { version = "0.8.0" }
-tonic = { version = "0.4.0"}
+prost-types = {version = "0.7"}
+rpc = {path = "../../packages/rpc", version = "0.1.0"}
+types = {path = "../../packages/types", version = "0.1.0"}
+wallet = {path = "../../packages/wallet", version = "0.1.0"}
 wasm-bindgen = { version = "0.2.70", features = ["serde-serialize"]}
 wasm-bindgen-futures = { version = "0.4.21"}
-wasm-bindgen-test = "0.3.20"
 
 [dev-dependencies]
-actix-rt = "2.0.2"
 wasm-bindgen-test = "0.3.21"
-
-[patch.crates-io]
-cosmos-sdk-proto = { git = "https://github.com/forbole/cosmos-rust", branch = "main"}
-# h2 = { git = "https://github.com/boxdot/h2", branch = "tonic-ws-transport" }
-# tonic = { git = "https://github.com/boxdot/tonic", branch = "tonic-ws-transport" }
-# tower-buffer = { git = "https://github.com/boxdot/tower", branch = "tonic-ws-transport" }
 
 [package.metadata.wasm-pack.profile.release]
 wasm-opt = true
