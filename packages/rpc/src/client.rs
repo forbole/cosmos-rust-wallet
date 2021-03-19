@@ -178,7 +178,7 @@ mod tests {
         let amount = Coin{ denom: "stake".to_string(), amount: "10".to_string() };
         let msg = MsgSend{
             from_address: address,
-            to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
+            to_address: "desmos16kjmymxuxjns7usuke2604arqm9222gjgp9d56".to_string(),
             amount: vec![amount]
         };
 
@@ -210,7 +210,7 @@ mod tests {
     async fn get_account_data_works() {
         let grpc_endpoint = "http://localhost:9090";
         let lcd_endpoint = "http://localhost:1317";
-        let address = "desmos1jgta2lsjq9zln4jgv8hxslg3hdghmvrx9dq3e6";
+        let address = "desmos1rc4jrjyxyq0qpv7sn5ex9tr0kt0chrdq3x66ah";
         let node_info = get_node_info(lcd_endpoint.to_string())
             .await
             .unwrap()
@@ -233,7 +233,7 @@ mod tests {
     #[actix_rt::test]
     async fn broadcast_tx_works() {
         let wallet = Wallet::from_mnemonic(
-            "battle call once stool three mammal hybrid list sign field athlete amateur cinnamon eagle shell erupt voyage hero assist maple matrix maximum able barrel",
+            "trap pioneer frame tissue genre sunset patch era amused thank lift coffee pizza raw ranch next nut armed tip mushroom goddess vacuum exchange siren",
             "m/44'/852'/0'/0/0".to_string(),
             "desmos".to_string(),
         ).unwrap();

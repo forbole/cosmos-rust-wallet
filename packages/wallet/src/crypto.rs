@@ -366,7 +366,7 @@ mod tests {
     #[actix_rt::test]
     async fn sign_tx_works() {
         let wallet = Wallet::from_mnemonic(
-            "battle call once stool three mammal hybrid list sign field athlete amateur cinnamon eagle shell erupt voyage hero assist maple matrix maximum able barrel",
+            "trap pioneer frame tissue genre sunset patch era amused thank lift coffee pizza raw ranch next nut armed tip mushroom goddess vacuum exchange siren",
             "m/44'/852'/0'/0/0".to_string(),
             "desmos".to_string(),
         ).unwrap();
@@ -399,7 +399,7 @@ mod tests {
         let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
         let msg = MsgSend{
             from_address: wallet.bech32_address.clone(),
-            to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
+            to_address: "desmos16kjmymxuxjns7usuke2604arqm9222gjgp9d56".to_string(),
             amount: vec![amount]
         };
 
