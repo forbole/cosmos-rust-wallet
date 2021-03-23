@@ -5,7 +5,6 @@
 // Copyright © 2020 Informal Systems Inc.
 // Licensed under the Apache 2.0 license
 
-use std::convert::TryFrom;
 use bech32::{ToBase32, Variant::Bech32};
 use bip39::{Language, Mnemonic, Seed};
 use bitcoin::{
@@ -20,18 +19,16 @@ use cosmos_sdk_proto::cosmos::{
         AuthInfo, Fee, ModeInfo, SignDoc, SignerInfo, TxBody, TxRaw,
     },
 };
+use crw_types::{error::Error, msg::Msg};
 use hdpath::StandardHDPath;
 use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use prost_types::Any;
 use ripemd160::Ripemd160;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use std::convert::TryFrom;
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
-use crw_types::{
-    error::Error,
-    msg::Msg
-};
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -62,9 +59,8 @@ impl Wallet {
         hrp: String,
     ) -> Result<Wallet, Error> {
         // Create mnemonic and generate seed from it
-        let mnemonic =
-            Mnemonic::from_phrase(mnemonic_words, Language::English)
-                .map_err(|err| Error::Mnemonic(err.to_string()))?;
+        let mnemonic = Mnemonic::from_phrase(mnemonic_words, Language::English)
+            .map_err(|err| Error::Mnemonic(err.to_string()))?;
         let seed = Seed::new(&mnemonic, "");
 
         // Set hd_path for master_key generation
@@ -99,7 +95,7 @@ impl Wallet {
 
         // Create tx body
         let tx_body = TxBody {
-            messages: msgs.iter().map(| msg | msg.0.clone()).collect(),
+            messages: msgs.iter().map(|msg| msg.0.clone()).collect(),
             memo: memo,
             timeout_height: timeout_height,
             extension_options: Vec::<Any>::new(),
@@ -187,16 +183,22 @@ impl From<WalletJS> for Wallet {
     fn from(wallet_js: WalletJS) -> Self {
         let private_key = ExtendedPrivKey::from_str(wallet_js.private_key.as_str()).unwrap();
         let public_key = ExtendedPubKey::from_str(wallet_js.public_key.as_str()).unwrap();
-        Wallet{ keychain: Keychain{ext_private_key: private_key, ext_public_key: public_key}, bech32_address: wallet_js.bech32_address }
+        Wallet {
+            keychain: Keychain {
+                ext_private_key: private_key,
+                ext_public_key: public_key,
+            },
+            bech32_address: wallet_js.bech32_address,
+        }
     }
 }
 
 impl From<Wallet> for WalletJS {
     fn from(wallet: Wallet) -> Self {
-        WalletJS{
+        WalletJS {
             public_key: wallet.keychain.ext_public_key.to_string(),
             private_key: wallet.keychain.ext_private_key.to_string(),
-            bech32_address: wallet.bech32_address
+            bech32_address: wallet.bech32_address,
         }
     }
 }
@@ -245,7 +247,6 @@ fn bech32_address_from_public_key(pub_key: ExtendedPubKey, hrp: String) -> Resul
     Ok(bech32_address)
 }
 
-
 /// sign the given bytes with the given private key, returning a signature representation
 fn sign_bytes(ext_private_key: ExtendedPrivKey, bytes_to_sign: Vec<u8>) -> Signature {
     let private_key_bytes = ext_private_key.private_key.to_bytes();
@@ -256,18 +257,9 @@ fn sign_bytes(ext_private_key: ExtendedPrivKey, bytes_to_sign: Vec<u8>) -> Signa
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmos_sdk_proto::cosmos::{
-        base::v1beta1::Coin,
-        bank::v1beta1::MsgSend
-    };
-    use k256::ecdsa::{
-        VerifyingKey,
-        signature::Verifier
-    };
-    use crw_client::{
-        client::ChainClient,
-        get_node_info
-    };
+    use cosmos_sdk_proto::cosmos::{bank::v1beta1::MsgSend, base::v1beta1::Coin};
+    use crw_client::{client::ChainClient, get_node_info};
+    use k256::ecdsa::{signature::Verifier, VerifyingKey};
 
     struct TestData {
         hd_path: StandardHDPath,
@@ -345,22 +337,28 @@ mod tests {
 
         let private_key = wallet.keychain.ext_private_key.clone();
         let public_key = wallet.keychain.ext_public_key.public_key.key.clone();
-        let signing_key = SigningKey::from_bytes(private_key.private_key.to_bytes().as_slice()).unwrap();
+        let signing_key =
+            SigningKey::from_bytes(private_key.private_key.to_bytes().as_slice()).unwrap();
         let verify_key = VerifyingKey::from(&signing_key);
 
-        let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
-        let msg = MsgSend{
+        let amount = Coin {
+            denom: "stake".to_string(),
+            amount: "100000".to_string(),
+        };
+        let msg = MsgSend {
             from_address: wallet.bech32_address.clone(),
             to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
-            amount: vec![amount]
+            amount: vec![amount],
         };
 
-        let mut msg_bytes =  Vec::new();
+        let mut msg_bytes = Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
         let signature: Signature = sign_bytes(private_key, msg_bytes.clone());
 
-        assert!(verify_key.verify(msg_bytes.clone().as_slice(), &signature).is_ok());
+        assert!(verify_key
+            .verify(msg_bytes.clone().as_slice(), &signature)
+            .is_ok());
     }
 
     #[actix_rt::test]
@@ -377,9 +375,14 @@ mod tests {
             .unwrap()
             .node_info;
         let grpc_endpoint = "http://localhost:9090";
-        let chain_client = ChainClient::new(node_info, lcd_endpoint.to_string(), grpc_endpoint.to_string());
+        let chain_client = ChainClient::new(
+            node_info,
+            lcd_endpoint.to_string(),
+            grpc_endpoint.to_string(),
+        );
 
-        let account = chain_client.get_account_data(wallet.bech32_address.clone())
+        let account = chain_client
+            .get_account_data(wallet.bech32_address.clone())
             .await
             .unwrap();
 
@@ -396,31 +399,28 @@ mod tests {
             granter: "".to_string(),
         };
 
-        let amount = Coin{ denom: "stake".to_string(), amount: "100000".to_string() };
-        let msg = MsgSend{
+        let amount = Coin {
+            denom: "stake".to_string(),
+            amount: "100000".to_string(),
+        };
+        let msg = MsgSend {
             from_address: wallet.bech32_address.clone(),
             to_address: "desmos16kjmymxuxjns7usuke2604arqm9222gjgp9d56".to_string(),
-            amount: vec![amount]
+            amount: vec![amount],
         };
 
-        let mut msg_bytes =  Vec::new();
+        let mut msg_bytes = Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
         let proto_msg = Msg(Any {
             type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
-            value: msg_bytes
+            value: msg_bytes,
         });
 
         let msgs = vec![proto_msg];
 
-        let tx_signed_bytes = wallet.sign_tx(
-            account,
-            chain_client.node_info.network,
-            msgs,
-            fee,
-            None,
-            0
-        )
+        let tx_signed_bytes = wallet
+            .sign_tx(account, chain_client.node_info.network, msgs, fee, None, 0)
             .unwrap();
 
         let tx_raw: TxRaw = prost::Message::decode(tx_signed_bytes.as_slice()).unwrap();

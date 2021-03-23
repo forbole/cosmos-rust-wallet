@@ -1,6 +1,6 @@
 //! This file defines the various errors raised by the cosmos signer
+use serde::{Deserialize, Serialize};
 use thiserror::Error;
-use serde::{Serialize, Deserialize};
 
 /// Various kinds of errors that can be raised by the signer
 #[derive(Error, Serialize, Deserialize, Debug, Clone, PartialEq)]
