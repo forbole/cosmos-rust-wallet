@@ -1,13 +1,13 @@
 use cosmos_sdk_proto::cosmos::tx::v1beta1::{Fee, BroadcastMode};
-use rpc::{
+use crw_client::{
     client::ChainClient,
     client::get_node_info,
 };
-use wallet::{
+use crw_wallet::{
     crypto::Wallet,
     crypto::WalletJS
 };
-use types::{
+use crw_types::{
     error::Error,
     msg::{Msg, AnyWrapper}
 };
@@ -81,7 +81,7 @@ pub async fn sign_and_send_msg(
 #[cfg(test)]
 mod test {
     use crate::signer::import_wallet;
-    use wallet::crypto::{
+    use crw_wallet::crypto::{
         WalletJS
     };
     use wasm_bindgen_test::*;

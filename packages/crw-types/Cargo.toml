@@ -1,10 +1,11 @@
 [package]
-name = "types"
+name = "crw-types"
 version = "0.1.0"
 authors = ["bragaz <leo.braga95@gmail.com"]
 edition = "2018"
 license = "Apache 2.0"
-repository = "https://github.com/forbole/cosmos-key-signer"
+repository = "https://github.com/forbole/cosmos-rust-wallet"
+keywords = ["blockchain", "cosmos", "cosmos-rust-wallet"]
 
 [dependencies]
 prost = { version = "0.7.0"}

@@ -1,10 +1,12 @@
 [package]
-name = "js-helpers"
+name = "crw-js-helpers"
 version = "0.1.0"
 authors = ["bragaz <leo.braga95@gmail.com"]
 edition = "2018"
+description = "Javascript helpers to interact with cosmos-rust-wallet"
 license = "Apache 2.0"
-repository = "https://github.com/forbole/cosmos-key-signer"
+repository = "https://github.com/forbole/cosmos-rust-wallet"
+keywords = ["blockchain", "cosmos", "cosmos-rust-wallet"]
 
 [lib]
 crate-type = ["cdylib"]
@@ -12,9 +14,9 @@ crate-type = ["cdylib"]
 [dependencies]
 cosmos-sdk-proto = { version = "0.3.0"}
 prost-types = {version = "0.7"}
-rpc = {path = "../../packages/rpc", version = "0.1.0"}
-types = {path = "../../packages/types", version = "0.1.0"}
-wallet = {path = "../../packages/wallet", version = "0.1.0"}
+crw-client = {path = "../../packages/crw-client", version = "0.1.0"}
+crw-types = { path = "../../packages/crw-types", version = "0.1.0" }
+crw-wallet = {path = "../../packages/crw-wallet", version = "0.1.0"}
 wasm-bindgen = { version = "0.2.70", features = ["serde-serialize"]}
 wasm-bindgen-futures = { version = "0.4.21"}
 

@@ -1,15 +1,15 @@
 [workspace]
 members = ["packages/*", "modules/*"]
 
-[profile.release.package.types]
+[profile.release.package.crw-types]
 codegen-units = 1
 incremental = false
 
-[profile.release.package.wallet]
+[profile.release.package.crw-wallet]
 codegen-units = 1
 incremental = false
 
-[profile.release.package.rpc]
+[profile.release.package.crw-client]
 codegen-units = 1
 incremental = false
 

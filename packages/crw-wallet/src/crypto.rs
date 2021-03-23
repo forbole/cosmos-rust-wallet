@@ -28,7 +28,7 @@ use serde::{Serialize, Deserialize};
 use sha2::{Digest, Sha256};
 use std::str::FromStr;
 use wasm_bindgen::prelude::*;
-use types::{
+use crw_types::{
     error::Error,
     msg::Msg
 };
@@ -264,7 +264,7 @@ mod tests {
         VerifyingKey,
         signature::Verifier
     };
-    use rpc::{
+    use crw_client::{
         client::ChainClient,
         get_node_info
     };
