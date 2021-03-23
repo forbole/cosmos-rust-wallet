@@ -1,5 +1,5 @@
 [package]
-name = "signer"
+name = "js-helpers"
 version = "0.1.0"
 authors = ["bragaz <leo.braga95@gmail.com"]
 edition = "2018"
