@@ -1,4 +1,4 @@
-name: Package-types
+name: crw-types
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Package-client
+name: crw-client
 
 on:
   push:

@@ -1,4 +1,4 @@
-name: Module-js-helpers
+name: js-helpers
 
 on:
   push:
