@@ -5,19 +5,9 @@ use crw_wallet::{crypto::Wallet, crypto::WalletJS};
 use prost_types::Any;
 use wasm_bindgen::prelude::*;
 
-/// Import a wallet from the given mnemonic
-#[wasm_bindgen]
-pub fn import_wallet(mnemonic: &str, derivation_path: &str, hrp: &str) -> Result<JsValue, JsValue> {
-    let wallet: WalletJS =
-        Wallet::from_mnemonic(mnemonic, derivation_path.to_string(), hrp.to_string())
-            .map_err(|error| JsValue::from_serde(&error).unwrap())?
-            .into();
-
-    Ok(JsValue::from_serde(&wallet).unwrap())
-}
-
 /// Sign and send a transaction with the given wallet
 #[wasm_bindgen]
+#[allow(dead_code)]
 pub async fn sign_and_send_msg(
     js_wallet: JsValue,
     js_msg: JsValue,
@@ -66,6 +56,18 @@ pub async fn sign_and_send_msg(
         .map_err(|error| JsValue::from_serde(&error).unwrap())?;
 
     Ok(JsValue::from_serde(&result.txhash).unwrap())
+}
+
+/// Import a wallet from the given mnemonic
+#[wasm_bindgen]
+#[allow(dead_code)]
+pub fn import_wallet(mnemonic: &str, derivation_path: &str, hrp: &str) -> Result<JsValue, JsValue> {
+    let wallet: WalletJS =
+        Wallet::from_mnemonic(mnemonic, derivation_path.to_string(), hrp.to_string())
+            .map_err(|error| JsValue::from_serde(&error).unwrap())?
+            .into();
+
+    Ok(JsValue::from_serde(&wallet).unwrap())
 }
 
 #[cfg(test)]
