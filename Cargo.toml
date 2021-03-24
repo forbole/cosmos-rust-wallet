@@ -1,38 +1,27 @@
-[package]
-name = "cosm-signer"
-version = "0.1.0"
-authors = ["bragaz <leo.braga95@gmail.com>"]
-edition = "2018"
+[workspace]
+members = ["packages/*", "modules/*"]
 
-[lib]
-crate-type = ["cdylib"]
+[profile.release.package.crw-types]
+codegen-units = 1
+incremental = false
 
-[dependencies]
-tonic = { version = "0.4.0"}
-prost = { version = "0.7.0"}
-prost-types = {version = "0.7"}
-wasm-bindgen = { version = "0.2.70", features = ["serde-serialize"]}
-wasm-bindgen-futures = { version = "0.4.21"}
-wasm-bindgen-test = "0.3.20"
-serde = { version = "1.0", features = ["derive"] }
-serde_json = { version = "1.0.62" }
-reqwest = { version = "0.11.0", features = ["blocking", "json"]}
-cosmos-sdk-proto = { version = "0.3.0"}
-thiserror = { version = "1.0.22" }
-bitcoin = { version = "0.26.0" }
-bech32 = { version = "0.8.0" }
-tiny-bip39 = { version = "0.8.0" }
-hdpath = {version = "0.6.0", features = ["with-bitcoin"] }
-sha2 = { version = "0.9.3" }
-ripemd160 = { version = "0.9.1" }
-k256 = { version = "0.7.2", features = ["ecdsa-core", "ecdsa", "sha256"]}
+[profile.release.package.crw-wallet]
+codegen-units = 1
+incremental = false
 
-[dev-dependencies]
-actix-rt = "2.0.2"
-wasm-bindgen-test = "0.3.21"
+[profile.release.package.crw-client]
+codegen-units = 1
+incremental = false
+
+[profile.release]
+rpath = false
+lto = true
+overflow-checks = true
+opt-level = 3
+debug = false
+debug-assertions = false
 
 [patch.crates-io]
 cosmos-sdk-proto = { git = "https://github.com/forbole/cosmos-rust", branch = "main"}
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = true
+# tonic = { git = "https://github.com/bragaz/tonic", rev = "d9e43d4" }
+# h2 = { git = "https://github.com/boxdot/h2", branch = "tonic-ws-transport" }

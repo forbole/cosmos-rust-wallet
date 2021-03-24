@@ -1,15 +1,15 @@
 //! Transaction Message representation
 use prost_types::Any;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct AnyWrapper {
     pub type_url: String,
-    pub value: Vec<u8>
+    pub value: Vec<u8>,
 }
 
 /// Transaction message wrapper
-pub struct Msg(pub(crate) Any);
+pub struct Msg(pub Any);
 
 impl Msg {
     pub fn new(type_url: impl Into<String>, value: impl Into<Vec<u8>>) -> Self {
@@ -34,6 +34,9 @@ impl From<Msg> for Any {
 
 impl From<AnyWrapper> for Any {
     fn from(any_wrap: AnyWrapper) -> Any {
-        Any{ type_url: any_wrap.type_url, value: any_wrap.value }
+        Any {
+            type_url: any_wrap.type_url,
+            value: any_wrap.value,
+        }
     }
 }

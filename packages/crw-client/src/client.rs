@@ -1,19 +1,14 @@
-//! This file contains all the methods to fetch data from a cosmos-sdk-based full node
+//! This file contains all the methods to fetch useful data from a cosmos-sdk-based chain
 
 use cosmos_sdk_proto::cosmos::{
-    auth::v1beta1::{
-        query_client::QueryClient, BaseAccount, QueryAccountRequest,
-    },
+    auth::v1beta1::{query_client::QueryClient, BaseAccount, QueryAccountRequest},
     base::abci::v1beta1::TxResponse,
-    tx::v1beta1::{
-        service_client::ServiceClient,
-        BroadcastMode, BroadcastTxRequest,
-    }
+    tx::v1beta1::{service_client::ServiceClient, BroadcastMode, BroadcastTxRequest},
 };
+use crw_types::error::Error;
 use reqwest::{get, StatusCode};
 use serde::{Deserialize, Serialize};
 use tonic::{codegen::http::Uri, transport::Channel, Request};
-use crate::error::Error;
 
 #[derive(Clone, Serialize, Deserialize)]
 /// Response of /node_info query
@@ -47,7 +42,7 @@ impl ChainClient {
 
     /// Returns the account data associated with the given address
     pub async fn get_account_data(&self, address: String) -> Result<BaseAccount, Error> {
-        /// TODO move this externally to create it one time only
+        // TODO move this externally to create it one time only
         // Create channel connection to the gRPC server
         let channel = Channel::builder(self.grpc_addr.parse::<Uri>().unwrap())
             .connect()
@@ -55,7 +50,6 @@ impl ChainClient {
             .map_err(|err| Error::Grpc(err.to_string()))?;
 
         // Create gRPC query auth client from channel
-        /// TODO move this externally to create it one time only
         let mut client = QueryClient::new(channel);
 
         // Build a new request
@@ -77,7 +71,7 @@ impl ChainClient {
     }
 
     /// Broadcast a tx through gRPC client
-    pub async fn broadcast_tx_gRPC(
+    pub async fn broadcast_tx(
         &self,
         tx_bytes: Vec<u8>,
         broadcast_mode: BroadcastMode,
@@ -134,15 +128,9 @@ pub async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Erro
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        wallet::Wallet,
-        msg::Msg
-    };
-    use cosmos_sdk_proto::cosmos::{
-        base::v1beta1::Coin,
-        tx::v1beta1::Fee,
-        bank::v1beta1::MsgSend
-    };
+    use cosmos_sdk_proto::cosmos::{bank::v1beta1::MsgSend, base::v1beta1::Coin, tx::v1beta1::Fee};
+    use crw_types::msg::Msg;
+    use crw_wallet::crypto::Wallet;
     use prost_types::Any;
 
     struct TestData {
@@ -160,7 +148,7 @@ mod tests {
         let chain_client = ChainClient::new(
             node_info,
             lcd_endpoint.to_string(),
-            grpc_endpoint.to_string()
+            grpc_endpoint.to_string(),
         );
 
         // Gas Fee
@@ -176,24 +164,31 @@ mod tests {
             granter: "".to_string(),
         };
 
-        let amount = Coin{ denom: "stake".to_string(), amount: "10".to_string() };
-        let msg = MsgSend{
+        let amount = Coin {
+            denom: "stake".to_string(),
+            amount: "10".to_string(),
+        };
+        let msg = MsgSend {
             from_address: address,
-            to_address: "desmos1gvd8j8w986qey68s6trc3h9zkzxest20zs5g0w".to_string(),
-            amount: vec![amount]
+            to_address: "desmos16kjmymxuxjns7usuke2604arqm9222gjgp9d56".to_string(),
+            amount: vec![amount],
         };
 
-        let mut msg_bytes =  Vec::new();
+        let mut msg_bytes = Vec::new();
         prost::Message::encode(&msg, &mut msg_bytes).unwrap();
 
         let proto_msg = Msg(Any {
             type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
-            value: msg_bytes
+            value: msg_bytes,
         });
 
         let msgs = vec![proto_msg];
 
-        TestData{ chain_client, msgs, fee }
+        TestData {
+            chain_client,
+            msgs,
+            fee,
+        }
     }
 
     #[actix_rt::test]
@@ -211,7 +206,7 @@ mod tests {
     async fn get_account_data_works() {
         let grpc_endpoint = "http://localhost:9090";
         let lcd_endpoint = "http://localhost:1317";
-        let address = "desmos1jgta2lsjq9zln4jgv8hxslg3hdghmvrx9dq3e6";
+        let address = "desmos1rc4jrjyxyq0qpv7sn5ex9tr0kt0chrdq3x66ah";
         let node_info = get_node_info(lcd_endpoint.to_string())
             .await
             .unwrap()
@@ -234,7 +229,7 @@ mod tests {
     #[actix_rt::test]
     async fn broadcast_tx_works() {
         let wallet = Wallet::from_mnemonic(
-            "battle call once stool three mammal hybrid list sign field athlete amateur cinnamon eagle shell erupt voyage hero assist maple matrix maximum able barrel",
+            "trap pioneer frame tissue genre sunset patch era amused thank lift coffee pizza raw ranch next nut armed tip mushroom goddess vacuum exchange siren",
             "m/44'/852'/0'/0/0".to_string(),
             "desmos".to_string(),
         ).unwrap();
@@ -242,29 +237,37 @@ mod tests {
         let test_data = setup_test(
             "http://localhost:1317",
             "http://localhost:9090",
-            wallet.bech32_address.clone()
-        ).await;
+            wallet.bech32_address.clone(),
+        )
+        .await;
 
-        let account = test_data.chain_client
+        let account = test_data
+            .chain_client
             .get_account_data(wallet.bech32_address.clone())
             .await
             .unwrap();
 
-        let tx_signed_bytes = wallet.sign_tx(
-            account,
-            test_data.chain_client.clone(),
-            test_data.msgs, test_data.fee,
-            None,
-            0
-        ).unwrap();
+        let tx_signed_bytes = wallet
+            .sign_tx(
+                account,
+                test_data.chain_client.node_info.network.clone(),
+                test_data.msgs,
+                test_data.fee,
+                None,
+                0,
+            )
+            .unwrap();
 
-        let res = test_data.chain_client.broadcast_tx_gRPC(tx_signed_bytes, BroadcastMode::Block)
-            .await.unwrap();
+        let res = test_data
+            .chain_client
+            .broadcast_tx(tx_signed_bytes, BroadcastMode::Block)
+            .await
+            .unwrap();
 
         let code = res.code;
         let raw_log = res.raw_log;
 
         assert_eq!(code, 0);
-        print!("{}",raw_log)
+        print!("{}", raw_log)
     }
 }
