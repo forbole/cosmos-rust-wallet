@@ -1,14 +1,9 @@
 use cosmos_sdk_proto::cosmos::tx::v1beta1::{BroadcastMode, Fee};
 use crw_client::{client::get_node_info, client::ChainClient};
-use crw_types::{
-    error::Error,
-    msg::{AnyWrapper, Msg},
-};
+use crw_types::msg::{AnyWrapper, Msg};
 use crw_wallet::{crypto::Wallet, crypto::WalletJS};
-
-use wasm_bindgen::prelude::*;
-
 use prost_types::Any;
+use wasm_bindgen::prelude::*;
 
 /// Import a wallet from the given mnemonic
 #[wasm_bindgen]
@@ -66,11 +61,11 @@ pub async fn sign_and_send_msg(
         .map_err(|error| JsValue::from_serde(&error).unwrap())?;
 
     let result = chain_client
-        .broadcast_tx_gRPC(signed_bytes, BroadcastMode::Block)
+        .broadcast_tx(signed_bytes, BroadcastMode::Block)
         .await
         .map_err(|error| JsValue::from_serde(&error).unwrap())?;
 
-    Ok(JsValue::from_serde(&response).unwrap())
+    Ok(JsValue::from_serde(&result.txhash).unwrap())
 }
 
 #[cfg(test)]

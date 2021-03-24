@@ -42,7 +42,7 @@ impl ChainClient {
 
     /// Returns the account data associated with the given address
     pub async fn get_account_data(&self, address: String) -> Result<BaseAccount, Error> {
-        /// TODO move this externally to create it one time only
+        // TODO move this externally to create it one time only
         // Create channel connection to the gRPC server
         let channel = Channel::builder(self.grpc_addr.parse::<Uri>().unwrap())
             .connect()
@@ -71,7 +71,7 @@ impl ChainClient {
     }
 
     /// Broadcast a tx through gRPC client
-    pub async fn broadcast_tx_gRPC(
+    pub async fn broadcast_tx(
         &self,
         tx_bytes: Vec<u8>,
         broadcast_mode: BroadcastMode,
@@ -260,7 +260,7 @@ mod tests {
 
         let res = test_data
             .chain_client
-            .broadcast_tx_gRPC(tx_signed_bytes, BroadcastMode::Block)
+            .broadcast_tx(tx_signed_bytes, BroadcastMode::Block)
             .await
             .unwrap();
 

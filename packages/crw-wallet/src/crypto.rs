@@ -28,7 +28,6 @@ use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use std::convert::TryFrom;
 use std::str::FromStr;
-use wasm_bindgen::prelude::*;
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
@@ -68,7 +67,7 @@ impl Wallet {
 
         let keychain = generate_keychain(hd_path, seed)?;
 
-        let bech32_address = bech32_address_from_public_key(keychain.ext_public_key.clone(), hrp)?;
+        let bech32_address = bech32_address_from_public_key(keychain.ext_public_key, hrp)?;
 
         let wallet = Wallet {
             keychain,
@@ -96,8 +95,8 @@ impl Wallet {
         // Create tx body
         let tx_body = TxBody {
             messages: msgs.iter().map(|msg| msg.0.clone()).collect(),
-            memo: memo,
-            timeout_height: timeout_height,
+            memo,
+            timeout_height,
             extension_options: Vec::<Any>::new(),
             non_critical_extension_options: Vec::<Any>::new(),
         };
@@ -148,7 +147,7 @@ impl Wallet {
         let sign_doc = SignDoc {
             body_bytes: tx_body_buffer.clone(),
             auth_info_bytes: auth_buffer.clone(),
-            chain_id: chain_id,
+            chain_id,
             account_number: account.account_number,
         };
 
