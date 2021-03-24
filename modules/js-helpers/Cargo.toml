@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["bragaz <leo.braga95@gmail.com"]
 edition = "2018"
 description = "Javascript helpers to interact with cosmos-rust-wallet"
-license = "Apache 2.0"
+license = "Apache-2.0"
 repository = "https://github.com/forbole/cosmos-rust-wallet"
 keywords = ["blockchain", "cosmos", "cosmos-rust-wallet"]
 
