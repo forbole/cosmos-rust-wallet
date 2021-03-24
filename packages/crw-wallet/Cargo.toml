@@ -3,6 +3,7 @@ name = "crw-wallet"
 version = "0.1.0"
 authors = ["bragaz <leo.braga95@gmail.com"]
 edition = "2018"
+description = "Wallet package of cosmos-rust-wallet to create a wallet and sign txs of a cosmos-sdk based chain"
 license = "Apache 2.0"
 repository = "https://github.com/forbole/cosmos-rust-wallet"
 keywords = ["blockchain", "cosmos", "cosmos-rust-wallet"]
