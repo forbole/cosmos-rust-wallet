@@ -30,4 +30,4 @@ wasm-bindgen-futures = { version = "0.4.21"}
 [dev-dependencies]
 wasm-bindgen-test = "0.3.20"
 actix-rt = "2.0.2"
-crw-client = { path = "../../packages/crw-client", version = "0.1.0"}
+##crw-client = { path = "../../packages/crw-client", version = "0.1.0"}
