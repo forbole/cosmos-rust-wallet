@@ -1,14 +1,13 @@
 //! This file contains all the methods to fetch useful data from a cosmos-sdk-based chain
 
-use cosmos_sdk_proto::cosmos::{
-    auth::v1beta1::{query_client::QueryClient, BaseAccount, QueryAccountRequest},
-    base::abci::v1beta1::TxResponse,
-    tx::v1beta1::{service_client::ServiceClient, BroadcastMode, BroadcastTxRequest},
-};
 use crw_types::error::Error;
 use reqwest::{get, StatusCode};
 use serde::{Deserialize, Serialize};
-use tonic::{codegen::http::Uri, transport::Channel, Request};
+use cosmos_sdk_proto::cosmos::{
+    auth::v1beta1::{BaseAccount, QueryAccountRequest, query_client::Query},
+    tx::v1beta1::{BroadcastMode, BroadcastTxRequest, service_client::Service},
+    base::abci::v1beta1::TxResponse,
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 /// Response of /node_info query
@@ -42,25 +41,17 @@ impl ChainClient {
 
     /// Returns the account data associated with the given address
     pub async fn get_account_data(&self, address: String) -> Result<BaseAccount, Error> {
-        // TODO move this externally to create it one time only
-        // Create channel connection to the gRPC server
-        let channel = Channel::builder(self.grpc_addr.parse::<Uri>().unwrap())
-            .connect()
-            .await
-            .map_err(|err| Error::Grpc(err.to_string()))?;
-
         // Create gRPC query auth client from channel
-        let mut client = QueryClient::new(channel);
+        let client = Query::new(self.grpc_addr.clone());
 
         // Build a new request
-        let request = Request::new(QueryAccountRequest { address });
+        let request = QueryAccountRequest { address };
 
         // Send request and wait for response
         let response = client
             .account(request)
             .await
-            .map_err(|err| Error::Grpc(err.to_string()))?
-            .into_inner();
+            .map_err(|err| Error::Grpc(err.to_string()))?;
 
         // Decode response body into BaseAccount
         let base_account: BaseAccount =
@@ -76,14 +67,8 @@ impl ChainClient {
         tx_bytes: Vec<u8>,
         broadcast_mode: BroadcastMode,
     ) -> Result<TxResponse, Error> {
-        // Create channel connection to the gRPC server
-        let channel = Channel::builder(self.grpc_addr.parse::<Uri>().unwrap())
-            .connect()
-            .await
-            .map_err(|err| Error::Grpc(err.to_string()))?;
-
         // Create gRPC tx client from channel
-        let mut tx_client = ServiceClient::new(channel);
+        let tx_client = Service::new(self.grpc_addr.clone());
 
         let mode = match broadcast_mode {
             BroadcastMode::Unspecified => 0,
@@ -92,13 +77,12 @@ impl ChainClient {
             BroadcastMode::Async => 3,
         };
 
-        let request = Request::new(BroadcastTxRequest { tx_bytes, mode });
+        let request = BroadcastTxRequest { tx_bytes, mode };
 
         let tx_response = tx_client
             .broadcast_tx(request)
             .await
             .map_err(|err| Error::Grpc(err.to_string()))?
-            .into_inner()
             .tx_response
             .unwrap();
 
