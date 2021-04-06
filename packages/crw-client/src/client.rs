@@ -1,13 +1,13 @@
 //! This file contains all the methods to fetch useful data from a cosmos-sdk-based chain
 
+use cosmos_sdk_proto::cosmos::{
+    auth::v1beta1::{query_client::Query, BaseAccount, QueryAccountRequest},
+    base::abci::v1beta1::TxResponse,
+    tx::v1beta1::{service_client::Service, BroadcastMode, BroadcastTxRequest},
+};
 use crw_types::error::Error;
 use reqwest::{get, StatusCode};
 use serde::{Deserialize, Serialize};
-use cosmos_sdk_proto::cosmos::{
-    auth::v1beta1::{BaseAccount, QueryAccountRequest, query_client::Query},
-    tx::v1beta1::{BroadcastMode, BroadcastTxRequest, service_client::Service},
-    base::abci::v1beta1::TxResponse,
-};
 
 #[derive(Clone, Serialize, Deserialize)]
 /// Response of /node_info query

@@ -26,10 +26,7 @@ use prost_types::Any;
 use ripemd160::Ripemd160;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
-use std::{
-    convert::TryFrom,
-    str::FromStr
-};
+use std::{convert::TryFrom, str::FromStr};
 
 /// Keychain contains a pair of Secp256k1 keys.
 pub struct Keychain {
