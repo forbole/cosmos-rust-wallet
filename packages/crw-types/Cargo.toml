@@ -9,6 +9,7 @@ repository = "https://github.com/forbole/cosmos-rust-wallet"
 keywords = ["blockchain", "cosmos", "cosmos-rust-wallet"]
 
 [dependencies]
+cosmos-sdk-proto = { version = "0.3.0"}
 prost = { version = "0.7.0"}
 prost-types = {version = "0.7"}
 serde = { version = "1.0", features = ["derive"] }
