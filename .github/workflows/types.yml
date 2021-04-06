@@ -33,6 +33,8 @@ jobs:
         uses: jetli/wasm-pack-action@v0.3.0
         with:
           version: 'latest'
+      - name: Wasm pack build
+        run: wasm-pack build --target web
   lints:
     name: Lints (fmt + clippy)
     runs-on: ubuntu-latest
