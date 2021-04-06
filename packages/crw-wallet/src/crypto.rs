@@ -43,7 +43,7 @@ pub struct Wallet {
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
-pub struct WalletJS {
+pub struct WalletJs {
     pub public_key: String,
     pub private_key: String,
     pub bech32_address: String,
@@ -177,8 +177,8 @@ impl Wallet {
 
 /// From trait implementation for Wallet <-> WalletJS
 /// This trait perform a smooth conversion between these two types
-impl From<WalletJS> for Wallet {
-    fn from(wallet_js: WalletJS) -> Self {
+impl From<WalletJs> for Wallet {
+    fn from(wallet_js: WalletJs) -> Self {
         let private_key = ExtendedPrivKey::from_str(wallet_js.private_key.as_str()).unwrap();
         let public_key = ExtendedPubKey::from_str(wallet_js.public_key.as_str()).unwrap();
         Wallet {
@@ -191,9 +191,9 @@ impl From<WalletJS> for Wallet {
     }
 }
 
-impl From<Wallet> for WalletJS {
+impl From<Wallet> for WalletJs {
     fn from(wallet: Wallet) -> Self {
-        WalletJS {
+        WalletJs {
             public_key: wallet.keychain.ext_public_key.to_string(),
             private_key: wallet.keychain.ext_private_key.to_string(),
             bech32_address: wallet.bech32_address,
