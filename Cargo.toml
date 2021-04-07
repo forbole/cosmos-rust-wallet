@@ -23,5 +23,3 @@ debug-assertions = false
 
 [patch.crates-io]
 cosmos-sdk-proto = { git = "https://github.com/forbole/cosmos-rust", branch = "main"}
-# tonic = { git = "https://github.com/bragaz/tonic", rev = "d9e43d4" }
-# h2 = { git = "https://github.com/boxdot/h2", branch = "tonic-ws-transport" }
