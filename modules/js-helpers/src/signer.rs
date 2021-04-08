@@ -69,6 +69,8 @@ pub fn import_wallet(mnemonic: &str, derivation_path: &str, hrp: &str) -> Result
             .into();
 
     Ok(JsValue::from_serde(&wallet).unwrap())
+
+
 }
 
 #[cfg(test)]
@@ -89,11 +91,12 @@ mod test {
         let wallet_js: WalletJs = js_wallet.into_serde().unwrap();
 
         assert_eq!(
-            wallet_js.bech32_address,
+            wallet_js.bech32_address.as_str(),
             "desmos1k8u92hx3k33a5vgppkyzq6m4frxx7ewnlkyjrh"
         );
+
         assert_eq!(
-            wallet_js.public_key,
+            wallet_js.public_key.as_str(),
             "02f5bf794ef934cb419bb9113f3a94c723ec6c2881a8d99eef851fd05b61ad698d"
         )
     }
