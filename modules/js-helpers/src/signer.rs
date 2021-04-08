@@ -1,7 +1,7 @@
 use cosmos_sdk_proto::cosmos::tx::v1beta1::{BroadcastMode, Fee};
 use crw_client::{client::get_node_info, client::ChainClient};
 use crw_types::msg::{AnyWrapper, Msg};
-use crw_wallet::{crypto::Wallet, crypto::WalletJS};
+use crw_wallet::{crypto::Wallet, crypto::WalletJs};
 use prost_types::Any;
 use wasm_bindgen::prelude::*;
 
@@ -17,7 +17,7 @@ pub async fn sign_and_send_msg(
     grpc_addr: String,
 ) -> Result<JsValue, JsValue> {
     // convert all the js values to actual rust types
-    let wallet_js: WalletJS = js_wallet.into_serde().unwrap();
+    let wallet_js: WalletJs = js_wallet.into_serde().unwrap();
     let wallet = Wallet::from(wallet_js);
     let msg_wrapped: AnyWrapper = js_msg.into_serde().unwrap();
     let msg: Msg = Msg(Any::from(msg_wrapped));
@@ -62,7 +62,7 @@ pub async fn sign_and_send_msg(
 #[wasm_bindgen]
 #[allow(dead_code)]
 pub fn import_wallet(mnemonic: &str, derivation_path: &str, hrp: &str) -> Result<JsValue, JsValue> {
-    let wallet: WalletJS =
+    let wallet: WalletJs =
         Wallet::from_mnemonic(mnemonic, derivation_path.to_string(), hrp.to_string())
             .map_err(|error| JsValue::from_serde(&error).unwrap())?
             .into();
@@ -73,7 +73,7 @@ pub fn import_wallet(mnemonic: &str, derivation_path: &str, hrp: &str) -> Result
 #[cfg(test)]
 mod test {
     use crate::signer::import_wallet;
-    use crw_wallet::crypto::WalletJS;
+    use crw_wallet::crypto::WalletJs;
     use wasm_bindgen_test::*;
 
     #[wasm_bindgen_test]
@@ -84,7 +84,7 @@ mod test {
             "desmos"
         ).unwrap();
 
-        let wallet_js: WalletJS = js_wallet.into_serde().unwrap();
+        let wallet_js: WalletJs = js_wallet.into_serde().unwrap();
 
         assert_eq!(
             wallet_js.bech32_address,
