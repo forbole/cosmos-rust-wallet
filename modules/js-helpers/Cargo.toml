@@ -15,7 +15,6 @@ crate-type = ["cdylib"]
 cosmos-sdk-proto = { version = "0.3.0"}
 prost-types = {version = "0.7"}
 crw-client = {path = "../../packages/crw-client", version = "0.1.0"}
-crw-types = { path = "../../packages/crw-types", version = "0.1.0" }
 crw-wallet = {path = "../../packages/crw-wallet", version = "0.1.0"}
 wasm-bindgen = { version = "0.2.70", features = ["serde-serialize"]}
 wasm-bindgen-futures = { version = "0.4.21"}

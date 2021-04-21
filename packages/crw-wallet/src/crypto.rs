@@ -6,27 +6,29 @@
 // Licensed under the Apache 2.0 license
 
 use bech32::{ToBase32, Variant::Bech32};
-use bip39::{Language, Mnemonic, Seed};
+use bip39::{Language, Mnemonic, Seed, MnemonicType};
 use bitcoin::{
     network::constants::Network,
     secp256k1::Secp256k1,
     util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey},
     PublicKey,
 };
-use crw_types::{error::Error};
 use hdpath::StandardHDPath;
 use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use ripemd160::Ripemd160;
 use sha2::{Digest, Sha256};
 use std::convert::TryFrom;
+use crate::WalletError;
 
 /// Keychain contains a pair of Secp256k1 keys.
+#[derive(Clone)]
 pub struct Keychain {
     pub ext_public_key: ExtendedPubKey,
     pub ext_private_key: ExtendedPrivKey,
 }
 
 /// MnemonicWallet is a facility used to sign transactions with a BIP-32 mnemonic.
+#[derive(Clone)]
 pub struct MnemonicWallet {
     mnemonic: Mnemonic,
     derivation_path: String,
@@ -35,16 +37,16 @@ pub struct MnemonicWallet {
 
 impl MnemonicWallet {
     /// Derive a Wallet from the given mnemonic_words and derivation path.
-    pub fn new(mnemonic_words: &str, derivation_path: &str) -> Result<MnemonicWallet, Error> {
+    pub fn new(mnemonic_words: &str, derivation_path: &str) -> Result<MnemonicWallet, WalletError> {
         // Create mnemonic and generate seed from it
         let mnemonic = Mnemonic::from_phrase(mnemonic_words, Language::English)
-            .map_err(|err| Error::Mnemonic(err.to_string()))?;
+            .map_err(|err| WalletError::Mnemonic(err.to_string()))?;
 
         let seed = Seed::new(&mnemonic, "");
 
         // Set hd_path for master_key generation
         let hd_path = StandardHDPath::try_from(derivation_path)
-            .map_err(|_| Error::DerivationPath(derivation_path.to_string()))?;
+            .map_err(|_| WalletError::DerivationPath(derivation_path.to_string()))?;
 
         let keychain = MnemonicWallet::generate_keychain(hd_path, seed)?;
 
@@ -55,8 +57,16 @@ impl MnemonicWallet {
         })
     }
 
+    /// Generates a wallet from a random mnemonic.
+    pub fn random(derivation_path: &str) -> Result<(MnemonicWallet, String), WalletError> {
+        let mnemonic = Mnemonic::new(MnemonicType::Words24, Language::English);
+        let phrase = mnemonic.phrase().to_owned();
+
+        Ok((MnemonicWallet::new(&phrase, derivation_path)?, phrase))
+    }
+
     /// Change the derivation path used used to derive the key from the mnemonic.
-    pub fn set_derivation_path(&mut self, derivation_path: &str) -> Result<(), Error> {
+    pub fn set_derivation_path(&mut self, derivation_path: &str) -> Result<(), WalletError> {
         // Update only if the derivation path is different.
         if derivation_path == self.derivation_path {
             return Ok(());
@@ -66,7 +76,7 @@ impl MnemonicWallet {
 
         // Set hd_path for master_key generation
         let hd_path = StandardHDPath::try_from(derivation_path)
-            .map_err(|_| Error::DerivationPath(derivation_path.to_string()))?;
+            .map_err(|_| WalletError::DerivationPath(derivation_path.to_string()))?;
 
         // Regenerate the keychain with the new derivation path
         let keychain = MnemonicWallet::generate_keychain(hd_path, seed)?;
@@ -79,16 +89,14 @@ impl MnemonicWallet {
     }
 
     /// Generate a keychain of Secp256k1 keys from the given hd_path and seed.
-    fn generate_keychain(hd_path: StandardHDPath, seed: Seed) -> Result<Keychain, Error> {
+    fn generate_keychain(hd_path: StandardHDPath, seed: Seed) -> Result<Keychain, WalletError> {
         let private_key = ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes())
             .and_then(|priv_key| {
                 priv_key.derive_priv(&Secp256k1::new(), &DerivationPath::from(hd_path))
             })
-            .map_err(|err| Error::PrivateKey(err.to_string()))?;
+            .map_err(|err| WalletError::PrivateKey(err.to_string()))?;
 
         let public_key = ExtendedPubKey::from_private(&Secp256k1::new(), &private_key);
-
-        println!("{}", private_key.private_key.key.to_string());
 
         Ok(Keychain {
             ext_private_key: private_key,
@@ -103,7 +111,7 @@ impl MnemonicWallet {
 
     /// Get the bech32 address derived from the mnemonic and the provided
     /// human readable part.
-    pub fn get_bech32_address(&self, hrp: &str) -> Result<String, Error> {
+    pub fn get_bech32_address(&self, hrp: &str) -> Result<String, WalletError> {
         let mut hasher = Sha256::new();
         let pub_key_bytes = self.get_pub_key().to_bytes();
         hasher.update(pub_key_bytes);
@@ -119,13 +127,13 @@ impl MnemonicWallet {
         let address_bytes = rip_result.to_vec();
 
         let bech32_address = bech32::encode(hrp, address_bytes.to_base32(), Bech32)
-            .map_err(|err| Error::Hrp(err.to_string()))?;
+            .map_err(|err| WalletError::Hrp(err.to_string()))?;
 
         Ok(bech32_address)
     }
 
     /// Sign the provided data using the public key derived from the mnemonic.
-    pub fn sign(&self, data: &[u8]) -> Result<Vec<u8>, Error> {
+    pub fn sign(&self, data: &[u8]) -> Result<Vec<u8>, WalletError> {
         if data.is_empty() {
             return Result::Ok(Vec::new());
         }
@@ -134,7 +142,7 @@ impl MnemonicWallet {
 
         // Sign the data provided data
         let signature: Signature = sign_key.try_sign(data)
-            .map_err(|err| Error::Sign(err.to_string()))?;
+            .map_err(|err| WalletError::Sign(err.to_string()))?;
 
         Ok(signature.as_ref().to_vec())
     }
