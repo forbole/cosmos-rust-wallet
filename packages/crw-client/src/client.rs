@@ -1,273 +1,211 @@
-//! This file contains all the methods to fetch useful data from a cosmos-sdk-based chain
+//! Module to interact with a cosmos based blockchain.
+//!
+//! This module provide a client that can be used to perform requests to a cosmos based blockchain.
 
+use crate::error::CosmosError;
+use crate::json::{NodeInfo, NodeInfoResponse};
+use cosmos_sdk_proto::cosmos::tx::v1beta1::{Tx, TxRaw};
 use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::{query_client::QueryClient, BaseAccount, QueryAccountRequest},
     base::abci::v1beta1::TxResponse,
     tx::v1beta1::{service_client::ServiceClient, BroadcastMode, BroadcastTxRequest},
 };
-use crw_types::error::Error;
 use reqwest::{get, StatusCode};
-use serde::{Deserialize, Serialize};
+use tonic::codegen::http::uri::InvalidUri;
+use tonic::transport::Endpoint;
 use tonic::{codegen::http::Uri, transport::Channel, Request};
 
-#[derive(Clone, Serialize, Deserialize)]
-/// Response of /node_info query
-pub struct NodeInfoResponse {
-    pub node_info: NodeInfo,
-}
-
-#[derive(Clone, Serialize, Deserialize)]
-/// NodeInfo represent some basics full node info
-pub struct NodeInfo {
-    pub id: String,
-    pub network: String,
-}
-
-/// ChainClient is the source to communicate with a full node
+/// Client to communicate with a full node.
 #[derive(Clone)]
-pub struct ChainClient {
-    pub node_info: NodeInfo,
-    pub grpc_addr: String,
-    pub lcd_addr: String,
+pub struct CosmosClient {
+    grpc_channel: Endpoint,
+    lcd_addr: String,
 }
 
-impl ChainClient {
-    pub fn new(node_info: NodeInfo, lcd_addr: String, grpc_addr: String) -> ChainClient {
-        ChainClient {
-            node_info,
-            grpc_addr,
-            lcd_addr,
-        }
+impl CosmosClient {
+    /// Create a new CosmosClient instance that communicates with the full node.  
+    /// The client will communicate using `lcd_address` for the legacy LCD requests
+    /// and `grpc_addr` for the new gRPC request.
+    ///
+    /// # Errors
+    /// Returns an [`Err`] if `grpc_addr` is an invalid URI.
+    ///
+    ///# Examples
+    ///
+    /// ```
+    ///  use crw_client::client::CosmosClient;
+    ///
+    ///  let client = CosmosClient::new("http://localhost:1317", "http://localhost:9090").unwrap();
+    /// ```
+    pub fn new(lcd_addr: &str, grpc_addr: &str) -> Result<CosmosClient, InvalidUri> {
+        let grpc_uri = grpc_addr.parse::<Uri>()?;
+        let grpc_channel = Channel::builder(grpc_uri);
+
+        Ok(CosmosClient {
+            grpc_channel,
+            lcd_addr: lcd_addr.to_string(),
+        })
     }
 
-    /// Returns the account data associated with the given address
-    pub async fn get_account_data(&self, address: String) -> Result<BaseAccount, Error> {
-        // TODO move this externally to create it one time only
+    /// Gets the information of a full node.
+    pub async fn node_info(&self) -> Result<NodeInfo, CosmosError> {
+        let endpoint = format!("{}{}", self.lcd_addr, "/node_info");
+        let response = get(&endpoint)
+            .await
+            .map_err(|err| CosmosError::Lcd(err.to_string()))?;
+
+        let node_info_response: NodeInfoResponse;
+        match response.status() {
+            StatusCode::OK => {
+                // Unwrap here is safe since we already knew that the response is good
+                node_info_response = response.json::<NodeInfoResponse>().await.unwrap()
+            }
+            status_code => return Err(CosmosError::Lcd(status_code.to_string())),
+        }
+
+        Ok(node_info_response.node_info)
+    }
+
+    /// Returns the account data associated to the given address.
+    pub async fn get_account_data(&self, address: &str) -> Result<BaseAccount, CosmosError> {
         // Create channel connection to the gRPC server
-        let channel = Channel::builder(self.grpc_addr.parse::<Uri>().unwrap())
+        let channel = self
+            .grpc_channel
             .connect()
             .await
-            .map_err(|err| Error::Grpc(err.to_string()))?;
+            .map_err(|err| CosmosError::Grpc(err.to_string()))?;
 
         // Create gRPC query auth client from channel
         let mut client = QueryClient::new(channel);
 
         // Build a new request
-        let request = Request::new(QueryAccountRequest { address });
+        let request = Request::new(QueryAccountRequest {
+            address: address.to_owned(),
+        });
 
         // Send request and wait for response
         let response = client
             .account(request)
             .await
-            .map_err(|err| Error::Grpc(err.to_string()))?
+            .map_err(|err| CosmosError::Grpc(err.to_string()))?
             .into_inner();
 
         // Decode response body into BaseAccount
         let base_account: BaseAccount =
-            prost::Message::decode(response.account.unwrap().value.as_slice())
-                .map_err(|err| Error::Decode(err.to_string()))?;
+            prost::Message::decode(response.account.unwrap().value.as_ref())?;
 
         Ok(base_account)
     }
 
-    /// Broadcast a tx through gRPC client
+    /// Broadcast a tx using the gRPC interface.
     pub async fn broadcast_tx(
         &self,
-        tx_bytes: Vec<u8>,
-        broadcast_mode: BroadcastMode,
-    ) -> Result<TxResponse, Error> {
-        // Create channel connection to the gRPC server
-        let channel = Channel::builder(self.grpc_addr.parse::<Uri>().unwrap())
+        tx: &Tx,
+        mode: BroadcastMode,
+    ) -> Result<Option<TxResponse>, CosmosError> {
+        // Some buffers used to serialize the objects
+        let mut serialized_body: Vec<u8> = Vec::new();
+        let mut serialized_auth: Vec<u8> = Vec::new();
+        let mut serialized_tx: Vec<u8> = Vec::new();
+
+        // Serialize the tx body and auth_info
+        if let Some(body) = &tx.body {
+            prost::Message::encode(body, &mut serialized_body)?;
+        }
+        if let Some(auth_info) = &tx.auth_info {
+            prost::Message::encode(auth_info, &mut serialized_auth)?;
+        }
+
+        // Prepare and serialize the TxRaw
+        let tx_raw = TxRaw {
+            body_bytes: serialized_body,
+            auth_info_bytes: serialized_auth,
+            signatures: tx.signatures.clone(),
+        };
+        prost::Message::encode(&tx_raw, &mut serialized_tx)?;
+
+        // Open the channel and perform the actual gRPC BroadcastTxRequest
+        let channel = self
+            .grpc_channel
             .connect()
             .await
-            .map_err(|err| Error::Grpc(err.to_string()))?;
+            .map_err(|err| CosmosError::Grpc(err.to_string()))?;
+        let mut service = ServiceClient::new(channel);
 
-        // Create gRPC tx client from channel
-        let mut tx_client = ServiceClient::new(channel);
+        let request = Request::new(BroadcastTxRequest {
+            tx_bytes: serialized_tx,
+            mode: mode as i32,
+        });
 
-        let mode = match broadcast_mode {
-            BroadcastMode::Unspecified => 0,
-            BroadcastMode::Block => 1,
-            BroadcastMode::Sync => 2,
-            BroadcastMode::Async => 3,
-        };
-
-        let request = Request::new(BroadcastTxRequest { tx_bytes, mode });
-
-        let tx_response = tx_client
+        let response = service
             .broadcast_tx(request)
             .await
-            .map_err(|err| Error::Grpc(err.to_string()))?
-            .into_inner()
-            .tx_response
-            .unwrap();
+            .map_err(|e| CosmosError::Grpc(e.to_string()))?
+            .into_inner();
 
-        Ok(tx_response)
+        Ok(response.tx_response)
     }
-}
-
-/// Returns the node info such as network moniker. Currently using LCD endpoint
-pub async fn get_node_info(lcd_address: String) -> Result<NodeInfoResponse, Error> {
-    let endpoint = format!("{}{}", lcd_address, "/node_info");
-    let response = get(&endpoint)
-        .await
-        .map_err(|err| Error::Lcd(err.to_string()))?;
-
-    let node_info_response: NodeInfoResponse;
-    match response.status() {
-        StatusCode::OK => {
-            // Unwrap here is safe since we already knew that the response is good
-            node_info_response = response.json::<NodeInfoResponse>().await.unwrap()
-        }
-        status_code => return Err(Error::Lcd(status_code.to_string())),
-    }
-
-    Ok(node_info_response)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use cosmos_sdk_proto::cosmos::{bank::v1beta1::MsgSend, base::v1beta1::Coin, tx::v1beta1::Fee};
-    use crw_types::msg::Msg;
-    use crw_wallet::crypto::Wallet;
-    use prost_types::Any;
+    use crate::tx::TxBuilder;
+    use cosmos_sdk_proto::cosmos::{bank::v1beta1::MsgSend, base::v1beta1::Coin};
+    use crw_wallet::crypto::MnemonicWallet;
 
-    struct TestData {
-        chain_client: ChainClient,
-        msgs: Vec<Msg>,
-        fee: Fee,
+    static TEST_MNEMONIC: &str = "elephant luggage finger obscure nest smooth flag clay recycle unfair capital category organ bicycle gallery sight canyon hotel dutch skull today pink scale aisle";
+    static DESMOS_DERIVATION_PATH: &str = "m/44'/852'/0'/0/0";
+
+    #[actix_rt::test]
+    async fn node_info() {
+        let cosmos_client =
+            CosmosClient::new("http://localhost:1317", "http://localhost:9090").unwrap();
+
+        let info = cosmos_client.node_info().await;
+
+        assert!(info.is_ok());
+        assert_eq!("testchain", info.unwrap().network);
     }
 
-    async fn setup_test(lcd_endpoint: &str, grpc_endpoint: &str, address: String) -> TestData {
-        let node_info = get_node_info(lcd_endpoint.to_string())
-            .await
-            .unwrap()
-            .node_info;
+    #[actix_rt::test]
+    async fn broadcast_tx() {
+        let wallet = MnemonicWallet::new(TEST_MNEMONIC, DESMOS_DERIVATION_PATH).unwrap();
 
-        let chain_client = ChainClient::new(
-            node_info,
-            lcd_endpoint.to_string(),
-            grpc_endpoint.to_string(),
-        );
+        let cosmos_client =
+            CosmosClient::new("http://localhost:1317", "http://localhost:9090").unwrap();
 
-        // Gas Fee
-        let coin = Coin {
-            denom: "stake".to_string(),
-            amount: "5000".to_string(),
-        };
-
-        let fee = Fee {
-            amount: vec![coin],
-            gas_limit: 300000,
-            payer: "".to_string(),
-            granter: "".to_string(),
-        };
+        let address = wallet.get_bech32_address("desmos").unwrap();
+        let account_data = cosmos_client.get_account_data(&address).await.unwrap();
 
         let amount = Coin {
             denom: "stake".to_string(),
             amount: "10".to_string(),
         };
-        let msg = MsgSend {
+
+        let msg_snd = MsgSend {
             from_address: address,
-            to_address: "desmos16kjmymxuxjns7usuke2604arqm9222gjgp9d56".to_string(),
+            to_address: "desmos18ek6mnlxj8sysrtvu60k5zj0re7s5n42yncner".to_string(),
             amount: vec![amount],
         };
 
-        let mut msg_bytes = Vec::new();
-        prost::Message::encode(&msg, &mut msg_bytes).unwrap();
+        let tx = TxBuilder::new("testchain")
+            .memo("Test memo")
+            .account_info(account_data.sequence, account_data.account_number)
+            .timeout_height(0)
+            .fee("stake", "5000", 300_000)
+            .add_message("/cosmos.bank.v1beta1.Msg/Send", msg_snd)
+            .unwrap()
+            .sign(&wallet)
+            .unwrap();
 
-        let proto_msg = Msg(Any {
-            type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
-            value: msg_bytes,
-        });
-
-        let msgs = vec![proto_msg];
-
-        TestData {
-            chain_client,
-            msgs,
-            fee,
-        }
-    }
-
-    #[actix_rt::test]
-    async fn get_node_info_works() {
-        let endpoint = "http://localhost:1317";
-        let res = get_node_info(endpoint.to_string()).await;
-        let exp_err = Error::Lcd("error sending request for url (http://localhost:1317/node_info): error trying to connect: tcp connect error: Connection refused (os error 61)".to_string());
-        match res {
-            Ok(node_response) => assert_ne!(node_response.node_info.network.len(), 0),
-            Err(err) => assert_eq!(err, exp_err),
-        }
-    }
-
-    #[actix_rt::test]
-    async fn get_account_data_works() {
-        let grpc_endpoint = "http://localhost:9090";
-        let lcd_endpoint = "http://localhost:1317";
-        let address = "desmos1rc4jrjyxyq0qpv7sn5ex9tr0kt0chrdq3x66ah";
-        let node_info = get_node_info(lcd_endpoint.to_string())
+        let res = cosmos_client
+            .broadcast_tx(&tx, BroadcastMode::Block)
             .await
             .unwrap()
-            .node_info;
-
-        let chain_config = ChainClient::new(
-            node_info,
-            lcd_endpoint.to_string(),
-            grpc_endpoint.to_string(),
-        );
-
-        let result = chain_config.get_account_data(address.to_string()).await;
-        let exp_err = Error::Grpc("GRPC error: transport error: error trying to connect: tcp connect error: Connection refused (os error 61)".to_string());
-        match result {
-            Ok(response) => assert_eq!(response.address, address),
-            Err(err) => assert_eq!(err, exp_err),
-        };
-    }
-
-    #[actix_rt::test]
-    async fn broadcast_tx_works() {
-        let wallet = Wallet::from_mnemonic(
-            "trap pioneer frame tissue genre sunset patch era amused thank lift coffee pizza raw ranch next nut armed tip mushroom goddess vacuum exchange siren",
-            "m/44'/852'/0'/0/0".to_string(),
-            "desmos".to_string(),
-        ).unwrap();
-
-        let test_data = setup_test(
-            "http://localhost:1317",
-            "http://localhost:9090",
-            wallet.bech32_address.clone(),
-        )
-        .await;
-
-        let account = test_data
-            .chain_client
-            .get_account_data(wallet.bech32_address.clone())
-            .await
             .unwrap();
 
-        let tx_signed_bytes = wallet
-            .sign_tx(
-                account,
-                test_data.chain_client.node_info.network.clone(),
-                test_data.msgs,
-                test_data.fee,
-                None,
-                0,
-            )
-            .unwrap();
-
-        let res = test_data
-            .chain_client
-            .broadcast_tx(tx_signed_bytes, BroadcastMode::Block)
-            .await
-            .unwrap();
-
-        let code = res.code;
-        let raw_log = res.raw_log;
-
-        assert_eq!(code, 0);
-        print!("{}", raw_log)
+        print!("{}", res.raw_log);
+        assert_eq!(0, res.code);
     }
 }
