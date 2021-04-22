@@ -25,7 +25,7 @@ struct Keychain {
     pub ext_private_key: ExtendedPrivKey,
 }
 
-/// MnemonicWallet is a facility used to generate the signature of a generic [`Vec<u8>`].
+/// Facility used to manage a Secp256k1 key pair and generate signatures.
 #[derive(Clone)]
 pub struct MnemonicWallet {
     mnemonic: Mnemonic,
@@ -34,7 +34,7 @@ pub struct MnemonicWallet {
 }
 
 impl MnemonicWallet {
-    /// Derive a Wallet from the given `mnemonic_phrase` and `derivation_path`.
+    /// Derive a Secp256k1 key pair from the given `mnemonic_phrase` and `derivation_path`.
     ///
     /// # Errors
     ///
@@ -50,7 +50,10 @@ impl MnemonicWallet {
     ///
     /// let wallet = MnemonicWallet::new(mnemonic, cosmos_dp).unwrap();
     /// ```
-    pub fn new(mnemonic_phrase: &str, derivation_path: &str) -> Result<MnemonicWallet, WalletError> {
+    pub fn new(
+        mnemonic_phrase: &str,
+        derivation_path: &str,
+    ) -> Result<MnemonicWallet, WalletError> {
         // Create mnemonic and generate seed from it
         let mnemonic = Mnemonic::from_phrase(mnemonic_phrase, Language::English)
             .map_err(|err| WalletError::Mnemonic(err.to_string()))?;
@@ -70,7 +73,7 @@ impl MnemonicWallet {
         })
     }
 
-    /// Generates a random mnemonic phrase and derive the wallet from them.
+    /// Generates a random mnemonic phrase and derive a Secp256k1 key pair from it.
     ///
     /// # Errors
     ///
@@ -212,7 +215,7 @@ mod tests {
 
         assert!(match result.err().unwrap() {
             WalletError::Mnemonic(_) => true,
-            _ => false
+            _ => false,
         });
     }
 
@@ -224,7 +227,7 @@ mod tests {
 
         assert!(match result.err().unwrap() {
             WalletError::DerivationPath(_) => true,
-            _ => false
+            _ => false,
         });
     }
 
@@ -247,7 +250,7 @@ mod tests {
 
         assert!(match wallet_error {
             WalletError::DerivationPath(_) => true,
-            _ => false
+            _ => false,
         });
     }
 
