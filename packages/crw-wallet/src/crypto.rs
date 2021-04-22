@@ -1,12 +1,8 @@
 //! Wallet utility to build & sign transactions on every cosmos-sdk based network
 
-// Includes code originally from ibc-rs:
-// <https://github.com/informalsystems/ibc-rs>
-// Copyright © 2020 Informal Systems Inc.
-// Licensed under the Apache 2.0 license
-
+use crate::WalletError;
 use bech32::{ToBase32, Variant::Bech32};
-use bip39::{Language, Mnemonic, Seed, MnemonicType};
+use bip39::{Language, Mnemonic, MnemonicType, Seed};
 use bitcoin::{
     network::constants::Network,
     secp256k1::Secp256k1,
@@ -18,7 +14,6 @@ use k256::ecdsa::{signature::Signer, Signature, SigningKey};
 use ripemd160::Ripemd160;
 use sha2::{Digest, Sha256};
 use std::convert::TryFrom;
-use crate::WalletError;
 
 /// Keychain contains a pair of Secp256k1 keys.
 #[derive(Clone)]
@@ -53,7 +48,7 @@ impl MnemonicWallet {
         Ok(MnemonicWallet {
             mnemonic,
             keychain,
-            derivation_path: derivation_path.to_owned()
+            derivation_path: derivation_path.to_owned(),
         })
     }
 
@@ -138,10 +133,12 @@ impl MnemonicWallet {
             return Result::Ok(Vec::new());
         }
         //  Get the sign key from the private key
-        let sign_key = SigningKey::from_bytes(&self.keychain.ext_private_key.private_key.to_bytes()).unwrap();
+        let sign_key =
+            SigningKey::from_bytes(&self.keychain.ext_private_key.private_key.to_bytes()).unwrap();
 
         // Sign the data provided data
-        let signature: Signature = sign_key.try_sign(data)
+        let signature: Signature = sign_key
+            .try_sign(data)
             .map_err(|err| WalletError::Sign(err.to_string()))?;
 
         Ok(signature.as_ref().to_vec())
@@ -180,36 +177,33 @@ mod tests {
 
     #[test]
     fn desmos_bech32_address() {
-        let wallet = MnemonicWallet::new(
-            TEST_MNEMONIC,
-            DESMOS_DERIVATION_PATH,
-        ).unwrap();
+        let wallet = MnemonicWallet::new(TEST_MNEMONIC, DESMOS_DERIVATION_PATH).unwrap();
 
         let address = wallet.get_bech32_address("desmos");
 
         assert!(address.is_ok());
-        assert_eq!(address.unwrap(), "desmos1k8u92hx3k33a5vgppkyzq6m4frxx7ewnlkyjrh");
+        assert_eq!(
+            address.unwrap(),
+            "desmos1k8u92hx3k33a5vgppkyzq6m4frxx7ewnlkyjrh"
+        );
     }
 
     #[test]
     fn cosmos_bech32_address() {
-        let wallet = MnemonicWallet::new(
-            TEST_MNEMONIC,
-            COSMOS_DERIVATION_PATH,
-        ).unwrap();
+        let wallet = MnemonicWallet::new(TEST_MNEMONIC, COSMOS_DERIVATION_PATH).unwrap();
 
         let address = wallet.get_bech32_address("cosmos");
 
         assert!(address.is_ok());
-        assert_eq!(address.unwrap(), "cosmos1dzczdka6wpzwvmawpps7tf8047gkft0e5cupun");
+        assert_eq!(
+            address.unwrap(),
+            "cosmos1dzczdka6wpzwvmawpps7tf8047gkft0e5cupun"
+        );
     }
 
     #[test]
     fn empty_sign() {
-        let wallet = MnemonicWallet::new(
-            TEST_MNEMONIC,
-            COSMOS_DERIVATION_PATH,
-        ).unwrap();
+        let wallet = MnemonicWallet::new(TEST_MNEMONIC, COSMOS_DERIVATION_PATH).unwrap();
 
         let empty: Vec<u8> = Vec::new();
         let result = wallet.sign(&empty);
@@ -220,17 +214,14 @@ mod tests {
 
     #[test]
     fn sign() {
-        let signature = "304502205289d5bdcbc97ed3c660fafb6aa2ee593db9b5d2aa84d6cbfcdd49c68c1ded9b022100d317b7ef515dec0b378de0c19a5ed91b00fa150251eb72fe47bf2c9eb78e8846";
-        let wallet = MnemonicWallet::new(
-            TEST_MNEMONIC,
-            COSMOS_DERIVATION_PATH,
-        ).unwrap();
+        let ref_hex_signature = "ce0558eb2f0847d4e58b29ca45f0a2a8764395b52c829888fa017aaf5b8b2e695e47aac9fe1cf77a66a1ba872d8a7e5302d31874b686973c0a5c196cca707667";
+        let wallet = MnemonicWallet::new(TEST_MNEMONIC, DESMOS_DERIVATION_PATH).unwrap();
 
         let data = "some simple data".as_bytes();
-        let result = wallet.sign(data);
+        let result = wallet.sign(data).unwrap();
 
-        assert!(result.is_ok());
-        assert_eq!(result.unwrap(), hex::decode(signature).unwrap());
+        let sign_hex = hex::encode(result);
+
+        assert_eq!(ref_hex_signature, sign_hex);
     }
-
 }
