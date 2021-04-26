@@ -38,12 +38,12 @@ pub enum TxBuildError {
 
 impl From<EncodeError> for CosmosError {
     fn from(e: EncodeError) -> Self {
-        return CosmosError::Encode(e.to_string());
+        CosmosError::Encode(e.to_string())
     }
 }
 
 impl From<DecodeError> for CosmosError {
     fn from(e: DecodeError) -> Self {
-        return CosmosError::Decode(e.to_string());
+        CosmosError::Decode(e.to_string())
     }
 }

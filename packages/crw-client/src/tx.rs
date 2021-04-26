@@ -138,7 +138,7 @@ impl TxBuilder {
 
     /// Generate the signed transaction using the provided wallet.
     ///
-    /// The transaction will be signed followin the `SIGN_MODE_DIRECT` specification.
+    /// The transaction will be signed following the `SIGN_MODE_DIRECT` specification.
     /// See [Cosmos adr-020](https://github.com/cosmos/cosmos-sdk/blob/master/docs/architecture/adr-020-protobuf-transaction-encoding.md)
     /// for more details.
     ///
@@ -191,8 +191,8 @@ impl TxBuilder {
         let mut auth_buffer = Vec::new();
         prost::Message::encode(&auth_info, &mut auth_buffer)?;
         let sign_doc = SignDoc {
-            body_bytes: tx_body_buffer.clone(),
-            auth_info_bytes: auth_buffer.clone(),
+            body_bytes: tx_body_buffer,
+            auth_info_bytes: auth_buffer,
             chain_id: self.chain_id,
             account_number: self.account_info.as_ref().unwrap().number,
         };
@@ -208,7 +208,7 @@ impl TxBuilder {
 
         // compose the raw tx
         Result::Ok(Tx {
-            body: Some(self.tx_body.clone()),
+            body: Some(self.tx_body),
             auth_info: Some(auth_info),
             signatures: vec![signature],
         })
