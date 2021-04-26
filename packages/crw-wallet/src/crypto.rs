@@ -141,7 +141,7 @@ impl MnemonicWallet {
 
     /// Gets the public key derived from the mnemonic.
     pub fn get_pub_key(&self) -> PublicKey {
-        self.keychain.ext_public_key.public_key.clone()
+        self.keychain.ext_public_key.public_key
     }
 
     /// Gets the bech32 address derived from the mnemonic and the provided
