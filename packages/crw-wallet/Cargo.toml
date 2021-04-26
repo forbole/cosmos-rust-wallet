@@ -25,7 +25,7 @@ wasm-bindgen-futures = { version = "0.4.21", optional = true}
 parking_lot = { version = "0.11.1", default-features = false, features = ["wasm-bindgen"], optional = true }
 rand = { version = "0.7.3", features = ["wasm-bindgen"], optional = true }
 
-[target.wasm32-unknown-unknown.dependencies.bindgen]
+[dependencies.bindgen]
 version = "0.2.70"
 optional = true
 package = "wasm-bindgen"
