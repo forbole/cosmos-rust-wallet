@@ -1,77 +1,53 @@
 # Client Package
 The client package takes care of query and broadcast operations towards a cosmos-sdk based chain (updated to stargate).
 
-## Chain Client
-```rust
-pub struct ChainClient {
-    pub node_info: NodeInfo,
-    pub grpc_addr: String,
-    pub lcd_addr: String,
-}
-
-pub struct NodeInfo {
-    pub id: String,
-    pub network: String,
-}
-```
-
 ### Get Account data
 ```rust
 fn get_account_data_example() {
     let grpc_endpoint = "http://localhost:9090";
     let lcd_endpoint = "http://localhost:1317";
     let address = "desmos1rc4jrjyxyq0qpv7sn5ex9tr0kt0chrdq3x66ah";
-    let node_info = get_node_info(lcd_endpoint.to_string())
-        .await
-        .unwrap()
-        .node_info;
+    let client = CosmosClient::new(lcd_endpoint, grpc_endpoint).unwrap();
 
-    let chain_client = ChainClient::new(
-        node_info,
-        lcd_endpoint.to_string(),
-        grpc_endpoint.to_string(),
-    );
-
-    let account = chain_client.get_account_data(address.to_string()).await.unwrap();
+    let account = client.get_account_data(address).await.unwrap();
 }
 ```
 ### Broadcast transaction
 ```rust
 fn broadcast_tx_example() {
-    let wallet = Wallet::from_mnemonic(...).unwrap();
-    let chain_client = ChainClient::new(...);
-    let msg = MsgSend {...};
-    let fee = Fee {...};
+    let wallet = MnemonicWallet::random("m/44'/118'/0'/0/0").unwrap();
 
-    let mut msg_bytes = Vec::new();
-    prost::Message::encode(&msg, &mut msg_bytes).unwrap();
+    let cosmos_client =
+        CosmosClient::new("http://localhost:1317", "http://localhost:9090").unwrap();
 
-    let proto_msg = Msg(Any {
-        type_url: "/cosmos.bank.v1beta1.Msg/Send".to_string(),
-        value: msg_bytes,
-    });
-    
-    let msgs = vec![proto_msg];
+    let address = wallet.get_bech32_address("cosmos").unwrap();
+    let account_data = cosmos_client.get_account_data(&address).await.unwrap();
 
-    let account = chain_client
-        .get_account_data(wallet.bech32_address.clone())
-        .await
+    let amount = Coin {
+        denom: "stake".to_string(),
+        amount: "10".to_string(),
+    };
+
+    let msg_snd = MsgSend {
+        from_address: address,
+        to_address: "cosmos18ek6mnlxj8sysrtvu60k5zj0re7s5n42yncner".to_string(),
+        amount: vec![amount],
+    };
+
+    let tx = TxBuilder::new("cosmoshub-5")
+        .memo("Test memo")
+        .account_info(account_data.sequence, account_data.account_number)
+        .timeout_height(0)
+        .fee("stake", "5000", 300_000)
+        .add_message("/cosmos.bank.v1beta1.Msg/Send", msg_snd)
+        .unwrap()
+        .sign(&wallet)
         .unwrap();
 
-    let tx_signed_bytes = wallet
-        .sign_tx(
-            account,
-            chain_client.node_info.network.clone(),
-            msgs,
-            fee,
-            None,
-            0,
-        )
-        .unwrap();
-
-    let transaction_response = chain_client
-        .broadcast_tx(tx_signed_bytes, BroadcastMode::Block)
+    let res = cosmos_client
+        .broadcast_tx(&tx, BroadcastMode::Block)
         .await
+        .unwrap()
         .unwrap();
 }
 ```

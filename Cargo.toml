@@ -1,9 +1,5 @@
 [workspace]
-members = ["packages/*", "modules/*"]
-
-[profile.release.package.crw-types]
-codegen-units = 1
-incremental = false
+members = ["packages/*"]
 
 [profile.release.package.crw-wallet]
 codegen-units = 1

@@ -1,9 +1,9 @@
 [package]
 name = "crw-wallet"
 version = "0.1.0"
-authors = ["bragaz <leo.braga95@gmail.com"]
+authors = ["bragaz <leo.braga95@gmail.com>", "Manuel Turetta <manuel.turetta94@gmail.com>"]
 edition = "2018"
-description = "Wallet package of cosmos-rust-wallet to create a wallet and sign txs of a cosmos-sdk based chain"
+description = "Wallet package of cosmos-rust-wallet to create a wallet and sign txs"
 license = "Apache-2.0"
 repository = "https://github.com/forbole/cosmos-rust-wallet"
 keywords = ["blockchain", "cosmos", "cosmos-rust-wallet"]
@@ -14,20 +14,27 @@ crate-type = ["cdylib", "lib"]
 [dependencies]
 bech32 = { version = "0.8.0" }
 bitcoin = { version = "0.26.0" }
-cosmos-sdk-proto = { version = "0.3.0"}
 hdpath = {version = "0.6.0", features = ["with-bitcoin"] }
 k256 = { version = "0.7.2", features = ["ecdsa-core", "ecdsa", "sha256"]}
-prost = { version = "0.7.0"}
-prost-types = {version = "0.7"}
 ripemd160 = { version = "0.9.1" }
 serde = { version = "1.0", features = ["derive"] }
 sha2 = { version = "0.9.3" }
-tiny-bip39 = { version = "0.8.0" }
-crw-types = { path = "../../packages/crw-types", version = "0.1.0" }
-wasm-bindgen = { version = "0.2.70", features = ["serde-serialize"]}
-wasm-bindgen-futures = { version = "0.4.21"}
+tiny-bip39 = { version = "0.8.0", default-features = false }
+thiserror = "1.0.24"
+wasm-bindgen-futures = { version = "0.4.21", optional = true}
+parking_lot = { version = "0.11.1", default-features = false, features = ["wasm-bindgen"], optional = true }
+rand = { version = "0.7.3", features = ["wasm-bindgen"], optional = true }
+
+[dependencies.bindgen]
+version = "0.2.70"
+optional = true
+package = "wasm-bindgen"
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.20"
 actix-rt = "2.0.2"
-##crw-client = { path = "../../packages/crw-client", version = "0.1.0"}
+hex = "0.4.3"
+
+[features]
+default = []
+wasm-bindgen = ["bindgen", "wasm-bindgen-futures", "parking_lot", "rand"]
