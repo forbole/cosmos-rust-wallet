@@ -3,9 +3,12 @@
 //! This module provides a facility to build and sign transactions for cosmos based blockchains.
 
 use crate::error::TxBuildError;
-use cosmos_sdk_proto::cosmos::tx::v1beta1::{
-    mode_info::{Single, Sum},
-    AuthInfo, Coin, Fee, ModeInfo, SignDoc, SignerInfo, Tx, TxBody,
+use cosmos_sdk_proto::cosmos::{
+    base::v1beta1::Coin,
+    tx::v1beta1::{
+        mode_info::{Single, Sum},
+        AuthInfo, Fee, ModeInfo, SignDoc, SignerInfo, Tx, TxBody,
+    },
 };
 use crw_wallet::crypto::MnemonicWallet;
 use prost::EncodeError;
