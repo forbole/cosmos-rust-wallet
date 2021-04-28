@@ -1,6 +1,6 @@
 # Cosmos Rust wallet
 
-A collection of packages to sign and send txs to a Cosmos-sdk based chains.
+A collection of packages to sign and send txs inside Cosmos-sdk based chains.
 
 ![GitHub](https://img.shields.io/github/license/forbole/cosmos-rust-wallet.svg) 
 

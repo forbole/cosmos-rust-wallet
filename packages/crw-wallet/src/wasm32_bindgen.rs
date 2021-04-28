@@ -1,4 +1,4 @@
-//! Implementation for WASM via via wasm-bindgen
+//! Implementation for WASM via wasm-bindgen
 
 use crate::crypto::MnemonicWallet;
 extern crate bindgen as wasm_bindgen;

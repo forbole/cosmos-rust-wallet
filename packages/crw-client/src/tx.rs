@@ -12,14 +12,14 @@ use crw_wallet::crypto::MnemonicWallet;
 use prost::EncodeError;
 use prost_types::Any;
 
-/// Private structure used to represents the information of the account
+/// AccountInfo is a private structure which represents the information of the account
 /// that is performing the transaction.
 struct AccountInfo {
     pub sequence: u64,
     pub number: u64,
 }
 
-/// The single signer transaction builder.
+/// TxBuilder represents the single signer transaction builder.
 pub struct TxBuilder {
     chain_id: String,
     account_info: Option<AccountInfo>,
@@ -103,7 +103,6 @@ impl TxBuilder {
         };
 
         self.tx_body.messages.push(data);
-
         self
     }
 
