@@ -4,11 +4,10 @@
 
 use crate::error::CosmosError;
 use crate::json::{NodeInfo, NodeInfoResponse};
-use cosmos_sdk_proto::cosmos::tx::v1beta1::{Tx, TxRaw};
 use cosmos_sdk_proto::cosmos::{
     auth::v1beta1::{query_client::QueryClient, BaseAccount, QueryAccountRequest},
     base::abci::v1beta1::TxResponse,
-    tx::v1beta1::{service_client::ServiceClient, BroadcastMode, BroadcastTxRequest},
+    tx::v1beta1::{service_client::ServiceClient, BroadcastMode, BroadcastTxRequest, Tx, TxRaw},
 };
 use reqwest::{get, StatusCode};
 use tonic::codegen::http::uri::InvalidUri;
