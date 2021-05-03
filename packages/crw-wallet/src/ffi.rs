@@ -152,13 +152,14 @@ pub extern "C" fn wallet_sign(
     null_pointer_check!(data);
 
     let signature = unsafe {
-        let data = std::slice::from_raw_parts(data, len as usize);
-        match ptr.as_ref().unwrap().sign(data).as_mut() {
+        let data = std::slice::from_raw_parts(data, data_len as usize);
+        match ptr.as_ref().unwrap().sign(data) {
             Ok(s) => {
-                let ptr = s.as_mut_ptr();
+                let mut sign = s.to_owned();
+                let ptr = sign.as_mut_ptr();
                 let vec_len = s.len() as c_uint;
                 // Prevent deallocation from rust, the array now can be reached only from the ptr variable.
-                mem::forget(s);
+                mem::forget(sign);
 
                 Signature {
                     len: vec_len,
