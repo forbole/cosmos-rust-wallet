@@ -198,3 +198,194 @@ pub extern "C" fn wallet_sign_free(ptr: *mut Signature) {
 
 // Macro to export the ffi_helpers's functions used to access the error message from other programming languages.
 export_error_handling_functions!();
+
+#[cfg(test)]
+mod tests {
+    use crate::ffi::{
+        cstring_free, wallet_free, wallet_from_mnemonic, wallet_get_bech32_address,
+        wallet_random_mnemonic, wallet_sign, wallet_sign_free,
+    };
+    use ffi_helpers::error_handling::error_message;
+    use std::ffi::CString;
+    use std::mem;
+    use std::ptr::null_mut;
+
+    static COSMOS_DERIVATION_PATH: &str = "m/44'/118'/0'/0/0";
+    static TEST_MNEMONIC: &str = "battle call once stool three mammal hybrid list sign field athlete amateur cinnamon eagle shell erupt voyage hero assist maple matrix maximum able barrel";
+
+    #[test]
+    fn test_random_mnemonic() {
+        let mnemonic = wallet_random_mnemonic();
+        assert!(!mnemonic.is_null());
+
+        let c_str = unsafe { CString::from_raw(mnemonic) };
+        let string = c_str.to_string_lossy().to_string();
+        let phrases: Vec<&str> = string.split(" ").collect();
+        assert_eq!(24, phrases.len());
+    }
+
+    #[test]
+    fn initialization_with_valid_mnemonic_and_derivation_path() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        assert!(!wallet.is_null());
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn initialize_with_invalid_mnemonic() {
+        let c_mnemonic = CString::new("invalid mnemonic").unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        assert!(wallet.is_null());
+
+        let error_msg = error_message();
+        assert!(error_msg.is_some());
+
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn initialize_with_null_mnemonic() {
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(null_mut(), c_dp);
+
+        assert!(wallet.is_null());
+        let error_msg = error_message();
+        assert!(error_msg.is_some());
+
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn initialize_with_invalid_derivation_path() {
+        let c_mnemonic = CString::new("invalid mnemonic").unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        assert!(wallet.is_null());
+
+        let error_msg = error_message();
+        assert!(error_msg.is_some());
+
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn initialize_with_null_derivation_path() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, null_mut());
+
+        assert!(wallet.is_null());
+        let error_msg = error_message();
+        assert!(error_msg.is_some());
+
+        cstring_free(c_mnemonic);
+    }
+
+    #[test]
+    fn bech32_address() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let hrp = CString::new("cosmos").unwrap().into_raw();
+        let address = wallet_get_bech32_address(wallet, hrp);
+        let c_address = unsafe { CString::from_raw(address) };
+
+        assert!(!address.is_null());
+        assert_eq!(
+            c_address.to_string_lossy().as_ref(),
+            "cosmos1dzczdka6wpzwvmawpps7tf8047gkft0e5cupun"
+        );
+
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn bech32_address_with_null_hrp() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let address = wallet_get_bech32_address(wallet, null_mut());
+        let error_msg = error_message();
+        assert!(address.is_null());
+        assert!(error_msg.is_some());
+
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn empty_sign() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let empty: Vec<u8> = Vec::new();
+        let signature = wallet_sign(wallet, empty.as_ptr(), empty.len() as u32);
+
+        assert!(!signature.is_null());
+        assert_eq!(0, unsafe { signature.as_ref() }.unwrap().len);
+
+        wallet_sign_free(signature);
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn sign_null() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let signature = wallet_sign(wallet, null_mut(), 12);
+        let error = error_message();
+
+        assert!(signature.is_null());
+        assert!(error.is_some());
+
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn sign() {
+        let ref_hex_signature = "5590171f32520497dd9ca07a3f03ef69ceff972471821902ebe31532d7f13be51021b7c8849431340fe6e91321987a90ffe5598d5e87fe4d55acf1bb90a000e9";
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let data = "some simple data".as_bytes();
+        let signature = wallet_sign(wallet, data.as_ptr(), data.len() as u32);
+
+        assert!(!signature.is_null());
+        let sign_ref = unsafe { signature.as_ref().unwrap() };
+        let signature_vec = unsafe {
+            Vec::from_raw_parts(sign_ref.data, sign_ref.len as usize, sign_ref.len as usize)
+        };
+        let sign_hex = hex::encode(&signature_vec);
+        assert_eq!(ref_hex_signature, sign_hex);
+
+        // Forget since will be freed from wallet_sign_free
+        mem::forget(signature_vec);
+        wallet_sign_free(signature);
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+}
