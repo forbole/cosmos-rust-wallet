@@ -1,5 +1,5 @@
 /***
- * @brief This C header file expose the function defined inside the ffi crate.
+ * @brief This C header file expose the FFI defined inside the ffi crate.
  */
 
 #include <stdint.h>
@@ -37,16 +37,16 @@ char* wallet_random_mnemonic();
 void cstring_free(char* str);
 
 /**
- * @brief Generates a wallet from a mnemonic and the provided derivation path.
+ * @brief Derive a Secp256k1 key pair from the given mnemonic and derivation_path.
  * @param mnemonic: The wallet mnemonic.
- * @param dp: The derivation path used to derive the keys from the mnemonic.
+ * @param derivation_path: The derivation path used to derive the keys from the mnemonic.
  * @return Returns a pointer to a valid wallet or NULL on error.
  * The caller must take care of freeing the returned wallet instance with
  * the wallet_free function.
  * In case of error the error cause can be obtained using the error_message_utf8
  * function.
  */
-wallet_t* wallet_from_mnemonic(const char* mnemonic, const char* dp);
+wallet_t* wallet_from_mnemonic(const char* mnemonic, const char* derivation_path);
 
 /**
  * @brief Free a wallet instance.
@@ -70,7 +70,7 @@ char* wallet_get_address(wallet_t *wallet, const char* hrp);
 /**
  * @brief Performs the signature of the provided data.
  * @param wallet: Pointer to the wallet instance.
- * @param data: The data to be sign.
+ * @param data: The data to sign.
  * @param len: The length of the data to sign.
  * @return Returns a pointer to a signature_t instance on success, NULL on error.
  * The caller must take care of freeing the returned signature with the
@@ -100,6 +100,6 @@ int last_error_length();
  * @brief Gets the last error message as UTF-8 encoded string.
  * @param out_buf: Pointer where will be stored the error message.
  * @param buf_size: Size of out_buf.
- * @return Returns the number of bytes wrote into out_buf or -1 there was an error.
+ * @return Returns the number of bytes wrote into out_buf or -1 on error.
  */
 int error_message_utf8(char *out_buf, int buf_size);
