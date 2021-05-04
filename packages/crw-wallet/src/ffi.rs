@@ -134,6 +134,39 @@ pub extern "C" fn wallet_get_bech32_address(
     address_c_str.into_raw()
 }
 
+/// Gets the wallet public key.
+/// This function returns the number of bytes copied into `out_buffer`.
+///
+/// # Errors
+/// Returns -1 if the provided arguments are invalid or -2 if the public key don't fit into `out_buffer`.
+#[no_mangle]
+pub extern "C" fn wallet_get_public_key(
+    ptr: *const MnemonicWallet,
+    out_buffer: *mut c_uchar,
+    size: size_t,
+) -> c_int {
+    if ptr.is_null() || out_buffer.is_null() || size <= 0 {
+        return -1;
+    }
+
+    let pub_key = unsafe {
+        ptr.as_ref()
+            .unwrap()
+            .get_pub_key()
+            .key
+            .serialize_uncompressed()
+    };
+
+    if pub_key.len() > size {
+        return -2;
+    }
+
+    let out_buf = unsafe { slice::from_raw_parts_mut(out_buffer, pub_key.len()) };
+
+    out_buf.copy_from_slice(&pub_key);
+    pub_key.len() as i32
+}
+
 /// Generates a signature of the provided data.
 /// The returned [`Signature`] pointer must bee freed using the [`wallet_sign_free`] function
 /// to avoid memory leaks.
@@ -202,7 +235,7 @@ export_error_handling_functions!();
 mod tests {
     use crate::ffi::{
         cstring_free, wallet_free, wallet_from_mnemonic, wallet_get_bech32_address,
-        wallet_random_mnemonic, wallet_sign, wallet_sign_free,
+        wallet_get_public_key, wallet_random_mnemonic, wallet_sign, wallet_sign_free,
     };
     use ffi_helpers::error_handling::error_message;
     use std::ffi::CString;
@@ -321,6 +354,52 @@ mod tests {
         let error_msg = error_message();
         assert!(address.is_null());
         assert!(error_msg.is_some());
+
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn get_public_key() {
+        let ref_public_key = "048b3f1f48e4dbc68287473da1a76d81bd827aac22622b7da5f351e2580d14b2823fe447037648f5d83b11dd2ea88e06db6c452b5376aa4c70e7a8c9c7b13cf39a";
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let mut out_buffer: [u8; 65] = [0; 65];
+        let copied_bytes = wallet_get_public_key(wallet, out_buffer.as_mut_ptr(), out_buffer.len());
+        assert_eq!(65, copied_bytes);
+
+        let pub_key_hex = hex::encode(out_buffer);
+        assert_eq!(ref_public_key, pub_key_hex);
+
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn get_public_key_invalid_args() {
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+        let mut out_buffer: [u8; 64] = [0; 64];
+
+        let copied_bytes = wallet_get_public_key(null_mut(), null_mut(), 0);
+        assert_eq!(-1, copied_bytes);
+
+        let copied_bytes = wallet_get_public_key(wallet, null_mut(), 0);
+        assert_eq!(-1, copied_bytes);
+
+        let copied_bytes = wallet_get_public_key(null_mut(), out_buffer.as_mut_ptr(), 0);
+        assert_eq!(-1, copied_bytes);
+
+        let copied_bytes = wallet_get_public_key(wallet, out_buffer.as_mut_ptr(), 0);
+        assert_eq!(-1, copied_bytes);
+
+        let copied_bytes = wallet_get_public_key(wallet, out_buffer.as_mut_ptr(), 2);
+        assert_eq!(-2, copied_bytes);
 
         wallet_free(wallet);
         cstring_free(c_mnemonic);
