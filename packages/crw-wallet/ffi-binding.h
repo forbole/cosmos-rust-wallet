@@ -65,7 +65,7 @@ void wallet_free(wallet_t* wallet);
  * In case of error the error cause can be obtained using the error_message_utf8
  * function.
  */
-char* wallet_get_address(wallet_t *wallet, const char* hrp);
+char* wallet_get_bech32_address(wallet_t *wallet, const char* hrp);
 
 /**
  * @brief Performs the signature of the provided data.
