@@ -2,7 +2,6 @@
 use crate::crypto::MnemonicWallet;
 use crate::WalletError;
 use bip39::{Language, Mnemonic, MnemonicType};
-use ffi_helpers::error_handling::error_message_utf8;
 use libc::{c_char, c_uchar};
 use std::ffi::{CStr, CString};
 use std::mem;
@@ -31,7 +30,7 @@ pub extern "C" fn cstring_free(s: *mut c_char) {
 ///
 /// # Errors
 /// This function returns a nullptr in case of error and store the error cause in a local thread
-/// global variable that can be accessed using the [`error_message_utf8`] function.
+/// global variable that can be accessed using the [error_message_utf8](ffi_helpers::error_handling::error_message_utf8) function.
 #[no_mangle]
 pub extern "C" fn wallet_random_mnemonic() -> *mut c_char {
     let mnemonic = Mnemonic::new(MnemonicType::Words24, Language::English);
@@ -54,7 +53,7 @@ pub extern "C" fn wallet_random_mnemonic() -> *mut c_char {
 ///
 /// # Errors
 /// This function returns a nullptr in case of error and store the error cause in a local thread
-/// global variable that can be accessed using the [`error_message_utf8`] function.
+/// global variable that can be accessed using the [error_message_utf8](ffi_helpers::error_handling::error_message_utf8) function.
 #[no_mangle]
 pub extern "C" fn wallet_from_mnemonic(
     mnemonic: *const c_char,
@@ -99,7 +98,7 @@ pub extern "C" fn wallet_free(ptr: *mut MnemonicWallet) {
 ///
 /// # Errors
 /// This function returns a nullptr in case of error and store the error cause in a local thread
-/// global variable that can be accessed using the [`error_message_utf8`] function.
+/// global variable that can be accessed using the [error_message_utf8](ffi_helpers::error_handling::error_message_utf8) function.
 #[no_mangle]
 pub extern "C" fn wallet_get_bech32_address(
     ptr: *const MnemonicWallet,
@@ -141,7 +140,7 @@ pub extern "C" fn wallet_get_bech32_address(
 ///
 /// # Errors
 /// This function returns a nullptr in case of error and store the error cause in a local thread
-/// global variable that can be accessed using the [`error_message_utf8`] function.
+/// global variable that can be accessed using the [error_message_utf8](ffi_helpers::error_handling::error_message_utf8) function.
 #[no_mangle]
 pub extern "C" fn wallet_sign(
     ptr: *const MnemonicWallet,
