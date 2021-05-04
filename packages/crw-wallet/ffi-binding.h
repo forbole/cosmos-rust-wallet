@@ -68,7 +68,7 @@ void wallet_free(wallet_t* wallet);
 char* wallet_get_bech32_address(wallet_t *wallet, const char* hrp);
 
 /**
- * @brief GGets secp256 public key from the wallet.
+ * @brief Gets secp256 public key from the wallet.
  * @param wallet: Pointer to the wallet instance.
  * @param out_buffer: Pointer where will be stored the public key
  * @param size: Size of out_buffer.
