@@ -2,11 +2,11 @@
 use crate::crypto::MnemonicWallet;
 use crate::WalletError;
 use bip39::{Language, Mnemonic, MnemonicType};
-use libc::{c_char, c_uchar};
+use libc::{c_char, c_int, c_uchar, size_t};
 use std::ffi::{CStr, CString};
-use std::mem;
 use std::os::raw::c_uint;
 use std::ptr::null_mut;
+use std::{mem, slice};
 
 #[repr(C)]
 pub struct Signature {
@@ -26,7 +26,7 @@ pub extern "C" fn cstring_free(s: *mut c_char) {
 }
 
 /// Generates a random mnemonic of 24 words.
-/// The returned mnemonic must bee freed using the [`cstring_free`] function to avoid memory leaks.
+/// The returned mnemonic must be freed using the [`cstring_free`] function to avoid memory leaks.
 ///
 /// # Errors
 /// This function returns a nullptr in case of error and store the error cause in a local thread
@@ -48,7 +48,7 @@ pub extern "C" fn wallet_random_mnemonic() -> *mut c_char {
 }
 
 /// Derive a Secp256k1 key pair from the given mnemonic_phrase and derivation_path.
-/// The returned [`MnemonicWallet`] ptr must bee freed using the [`wallet_free`] function to avoid memory
+/// The returned [`MnemonicWallet`] ptr must be freed using the [`wallet_free`] function to avoid memory
 /// leaks.
 ///
 /// # Errors
