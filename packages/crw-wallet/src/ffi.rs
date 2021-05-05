@@ -2,9 +2,8 @@
 use crate::crypto::MnemonicWallet;
 use crate::WalletError;
 use bip39::{Language, Mnemonic, MnemonicType};
-use libc::{c_char, c_int, c_uchar, size_t};
+use libc::{c_char, c_int, c_uchar, size_t, c_uint};
 use std::ffi::{CStr, CString};
-use std::os::raw::c_uint;
 use std::ptr::null_mut;
 use std::{mem, slice};
 
@@ -142,6 +141,7 @@ pub extern "C" fn wallet_get_bech32_address(
 #[no_mangle]
 pub extern "C" fn wallet_get_public_key(
     ptr: *const MnemonicWallet,
+    compressed: c_uint,
     out_buffer: *mut c_uchar,
     size: size_t,
 ) -> c_int {
@@ -150,11 +150,16 @@ pub extern "C" fn wallet_get_public_key(
     }
 
     let pub_key = unsafe {
-        ptr.as_ref()
+        let key = ptr.as_ref()
             .unwrap()
             .get_pub_key()
-            .key
-            .serialize_uncompressed()
+            .key;
+
+        if compressed != 0 {
+            key.serialize().to_vec()
+        } else {
+            key.serialize_uncompressed().to_vec()
+        }
     };
 
     if pub_key.len() > size {
@@ -368,8 +373,27 @@ mod tests {
         let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
 
         let mut out_buffer: [u8; 65] = [0; 65];
-        let copied_bytes = wallet_get_public_key(wallet, out_buffer.as_mut_ptr(), out_buffer.len());
+        let copied_bytes = wallet_get_public_key(wallet, 0, out_buffer.as_mut_ptr(), out_buffer.len());
         assert_eq!(65, copied_bytes);
+
+        let pub_key_hex = hex::encode(out_buffer);
+        assert_eq!(ref_public_key, pub_key_hex);
+
+        wallet_free(wallet);
+        cstring_free(c_mnemonic);
+        cstring_free(c_dp);
+    }
+
+    #[test]
+    fn get_public_key_compressed() {
+        let ref_public_key = "028b3f1f48e4dbc68287473da1a76d81bd827aac22622b7da5f351e2580d14b282";
+        let c_mnemonic = CString::new(TEST_MNEMONIC).unwrap().into_raw();
+        let c_dp = CString::new(COSMOS_DERIVATION_PATH).unwrap().into_raw();
+        let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
+
+        let mut out_buffer: [u8; 33] = [0; 33];
+        let copied_bytes = wallet_get_public_key(wallet, 1, out_buffer.as_mut_ptr(), out_buffer.len());
+        assert_eq!(33, copied_bytes);
 
         let pub_key_hex = hex::encode(out_buffer);
         assert_eq!(ref_public_key, pub_key_hex);
@@ -386,19 +410,19 @@ mod tests {
         let wallet = wallet_from_mnemonic(c_mnemonic, c_dp);
         let mut out_buffer: [u8; 64] = [0; 64];
 
-        let copied_bytes = wallet_get_public_key(null_mut(), null_mut(), 0);
+        let copied_bytes = wallet_get_public_key(null_mut(), 0, null_mut(), 0);
         assert_eq!(-1, copied_bytes);
 
-        let copied_bytes = wallet_get_public_key(wallet, null_mut(), 0);
+        let copied_bytes = wallet_get_public_key(wallet, 0,null_mut(), 0);
         assert_eq!(-1, copied_bytes);
 
-        let copied_bytes = wallet_get_public_key(null_mut(), out_buffer.as_mut_ptr(), 0);
+        let copied_bytes = wallet_get_public_key(null_mut(), 0,out_buffer.as_mut_ptr(), 0);
         assert_eq!(-1, copied_bytes);
 
-        let copied_bytes = wallet_get_public_key(wallet, out_buffer.as_mut_ptr(), 0);
+        let copied_bytes = wallet_get_public_key(wallet, 0,out_buffer.as_mut_ptr(), 0);
         assert_eq!(-1, copied_bytes);
 
-        let copied_bytes = wallet_get_public_key(wallet, out_buffer.as_mut_ptr(), 2);
+        let copied_bytes = wallet_get_public_key(wallet, 0,out_buffer.as_mut_ptr(), 2);
         assert_eq!(-2, copied_bytes);
 
         wallet_free(wallet);
