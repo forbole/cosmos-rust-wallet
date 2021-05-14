@@ -70,7 +70,8 @@ char* wallet_get_bech32_address(wallet_t *wallet, const char* hrp);
 /**
  * @brief Gets secp256 public key from the wallet.
  * @param wallet: Pointer to the wallet instance.
- * @param compressed: True to get the public key in a compressed format, false otherwise.
+ * @param compressed: a value != 0 to get the public key in compressed format,
+ * 0 to get in uncompressed format.
  * @param out_buffer: Pointer where will be stored the public key
  * @param size: Size of out_buffer.
  * @return Returns the number of bytes wrote inside out_buffer on success,
