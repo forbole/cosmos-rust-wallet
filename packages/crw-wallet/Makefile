@@ -6,6 +6,10 @@ osx_sdk := 11.1
 ios_sdk := 14.4
 android_ndk := r21e
 
+lint:
+	cargo fmt
+	cargo clippy -- -D warnings
+
 clean:
 	rm -Rf $(current_dir)/target
 	rm -Rf $(current_dir)/pkg
