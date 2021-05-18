@@ -1,5 +1,5 @@
 /***
- * @brief This C header file expose the FFI defined inside the ffi crate.
+ * @brief This C header file exposes the FFI defined inside the ffi crate.
  */
 
 #include <stdint.h>
@@ -7,7 +7,7 @@
 typedef struct wallet wallet_t;
 
 /**
- * @brief Struct that represent a signature.
+ * @brief Struct that represents a signature.
  */
 typedef struct {
   /**
@@ -70,13 +70,15 @@ char* wallet_get_bech32_address(wallet_t *wallet, const char* hrp);
 /**
  * @brief Gets secp256 public key from the wallet.
  * @param wallet: Pointer to the wallet instance.
+ * @param compressed: a value != 0 to get the public key in compressed format,
+ * 0 to get in uncompressed format.
  * @param out_buffer: Pointer where will be stored the public key
  * @param size: Size of out_buffer.
  * @return Returns the number of bytes wrote inside out_buffer on success,
  * -1 if the provided arguments are invalid or -2 if the public key don't fit
  * into out_buffer.
  */
-int wallet_get_public_key(wallet_t *wallet, uint8_t *out_buffer, int size);
+int wallet_get_public_key(wallet_t *wallet, uint32_t compressed, uint8_t *out_buffer, int size);
 
 /**
  * @brief Performs the signature of the provided data.

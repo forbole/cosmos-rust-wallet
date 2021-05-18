@@ -36,6 +36,19 @@ impl JsMnemonicWallet {
             .map_err(|e| JsValue::from(e.to_string()))?)
     }
 
+    #[wasm_bindgen(js_name = getPubKey)]
+    pub fn get_pub_key(&self, compressed: Option<bool>) -> Vec<u8> {
+        return if compressed.unwrap_or(true) {
+            self.wallet.get_pub_key().key.serialize().to_vec()
+        } else {
+            self.wallet
+                .get_pub_key()
+                .key
+                .serialize_uncompressed()
+                .to_vec()
+        };
+    }
+
     pub fn sign(&self, data: Vec<u8>) -> Result<Vec<u8>, JsValue> {
         Ok(self
             .wallet
