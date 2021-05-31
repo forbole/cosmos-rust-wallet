@@ -118,6 +118,24 @@ impl Preferences for UnencryptedPreferences {
         Ok(())
     }
 
+    fn get_binary(&self, key: &str) -> Option<Vec<u8>> {
+        self.data.get(key).and_then(|v| v.as_array())
+            .map(|v| {
+                let mut vector: Vec<u8> = Vec::with_capacity(v.len());
+                for value in v {
+                    if value.is_u64() {
+                        vector.push(value.as_u64().unwrap() as u8)
+                    }
+                }
+                vector
+            })
+    }
+
+    fn put_binary(&mut self, key: &str, value: &[u8]) -> Result<()> {
+        self.data.insert(key.to_owned(), Value::from(value));
+        Ok(())
+    }
+
     fn clear(&mut self) {
         self.data.clear()
     }
@@ -173,11 +191,12 @@ mod tests {
     #[test]
     pub fn test_data_read_write() {
         let set_name = "rw";
-
+        let test_vec: Vec<u8> = vec![12, 13, 54, 42];
         let mut preferences = UnencryptedPreferences::new(set_name).unwrap();
         assert!(preferences.put_i32("i32", 42).is_ok());
         assert!(preferences.put_str("str", "str".to_owned()).is_ok());
         assert!(preferences.put_bool("bool", true).is_ok());
+        assert!(preferences.put_binary("bin", &test_vec).is_ok());
 
         // Write data to disk
         preferences.save().unwrap();
@@ -187,6 +206,7 @@ mod tests {
         let i32_result = preferences.get_i32("i32");
         let str_result = preferences.get_str("str");
         let bool_result = preferences.get_bool("bool");
+        let binary_result = preferences.get_binary("bin");
 
         // Delete the file from the disk to avoid that some date remain on the disk if the
         // test fails.
@@ -194,5 +214,6 @@ mod tests {
         assert_eq!(42, i32_result.unwrap());
         assert_eq!("str", str_result.unwrap());
         assert_eq!(true, bool_result.unwrap());
+        assert_eq!(test_vec, binary_result.unwrap());
     }
 }

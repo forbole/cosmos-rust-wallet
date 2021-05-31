@@ -21,6 +21,14 @@ impl PreferencesWrapper {
         Ok(self.container.put_i32(key, value)?)
     }
 
+    pub fn get_str(&self, key: &str) -> Option<String> {
+        self.container.get_str(key)
+    }
+
+    pub fn put_str(&mut self, key: &str, value: &str) -> Result<(), JsValue> {
+        Ok(self.container.put_str(key, value.to_owned())?)
+    }
+
     pub fn get_bool(&self, key: &str) -> Option<bool> {
         self.container.get_bool(key)
     }
@@ -29,12 +37,12 @@ impl PreferencesWrapper {
         Ok(self.container.put_bool(key, value)?)
     }
 
-    pub fn get_string(&self, key: &str) -> Option<String> {
-        self.container.get_str(key)
+    fn get_binary(&self, key: &str) -> Option<Vec<u8>> {
+        self.container.get_binary(key)
     }
 
-    pub fn put_string(&mut self, key: &str, value: &str) -> Result<(), JsValue> {
-        Ok(self.container.put_str(key, value.to_owned())?)
+    fn put_binary(&mut self, key: &str, value: &[u8]) -> Result<(), JsValue> {
+        Ok(self.container.insert(key.to_owned(), Value::from(value))?)
     }
 
     pub fn clear(&mut self) {
