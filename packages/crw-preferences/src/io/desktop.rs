@@ -5,8 +5,6 @@
 //! * linux.
 
 use crate::io::{IoError, Result};
-#[cfg(not(test))]
-use dirs;
 use std::fs::File;
 use std::path::PathBuf;
 use std::{fs, result::Result as StdResult};
@@ -67,7 +65,7 @@ fn get_config_file(name: &str, create: bool) -> StdResult<PathBuf, std::io::Erro
 /// * [IoError::EmptyData] if the file is empty
 pub fn load(name: &str) -> Result<String> {
     get_config_file(name, true)
-        .and_then(|path| fs::read_to_string(path))
+        .and_then(fs::read_to_string)
         .map_err(|_| IoError::Read)
         .and_then(|data| {
             if data.is_empty() {

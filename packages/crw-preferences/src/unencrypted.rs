@@ -32,8 +32,8 @@ impl UnencryptedPreferences {
             };
         }
 
-        Ok(serde_json::from_str(&disk_data.unwrap())
-            .map_err(|_| PreferencesError::DeserializationError)?)
+        serde_json::from_str(&disk_data.unwrap())
+            .map_err(|_| PreferencesError::DeserializationError)
     }
 
     /// Writes the data as json to the device storage.
@@ -139,7 +139,7 @@ impl Preferences for UnencryptedPreferences {
     }
 
     fn save(&self) -> Result<()> {
-        return UnencryptedPreferences::write_to_disk(&self.name, &self.data);
+        UnencryptedPreferences::write_to_disk(&self.name, &self.data)
     }
 }
 

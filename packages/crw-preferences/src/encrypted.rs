@@ -6,7 +6,6 @@ use crate::io;
 use crate::io::IoError;
 use crate::preferences::{Preferences, PreferencesError, Result};
 use base64::DecodeError;
-use bincode;
 use cocoon::{Cocoon, Error as CocoonErr};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
