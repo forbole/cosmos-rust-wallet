@@ -11,9 +11,9 @@ mod desktop;
 #[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
 use desktop as sys;
 
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js",))]
 mod wasm;
-#[cfg(target_arch = "wasm32")]
+#[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js"))]
 use wasm as sys;
 
 /// Struct that represents a generic I/O error.
