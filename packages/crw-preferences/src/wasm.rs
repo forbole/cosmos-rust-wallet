@@ -42,7 +42,7 @@ impl PreferencesWrapper {
     }
 
     fn put_binary(&mut self, key: &str, value: &[u8]) -> Result<(), JsValue> {
-        Ok(self.container.insert(key.to_owned(), Value::from(value))?)
+        Ok(self.container.put_binary(key, value)?)
     }
 
     pub fn clear(&mut self) {
