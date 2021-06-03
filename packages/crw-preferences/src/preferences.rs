@@ -14,7 +14,7 @@ pub enum PreferencesError {
     IO(#[from] IoError),
     #[error("error while deserializing the preferences")]
     DeserializationError,
-    #[error("error while deserializing the preferences")]
+    #[error("error while serializing the preferences")]
     SerializationError,
 }
 
