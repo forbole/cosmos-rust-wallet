@@ -37,7 +37,40 @@ pub struct EncryptedPreferences {
 }
 
 impl EncryptedPreferences {
-    // Creates a new [UnencryptedPreferences] with the provided name.
+    fn load_from_disk(
+        password: &str,
+        name: &str,
+    ) -> StdResult<HashMap<String, Value>, EncryptedPreferencesError> {
+        let read_result = io::load(name);
+
+        if read_result.is_err() {
+            let err = read_result.err().unwrap();
+            return match err {
+                IoError::EmptyData => Ok(HashMap::new()),
+                IoError::InvalidName(s) => Err(EncryptedPreferencesError::from(
+                    PreferencesError::InvalidName(s),
+                )),
+                _ => Err(EncryptedPreferencesError::from(PreferencesError::IO(err))),
+            };
+        }
+        let base64_data = read_result.unwrap();
+
+        // Get the data as binary
+        let encrypted = base64::decode(base64_data)
+            .map_err(|_| EncryptedPreferencesError::from(PreferencesError::DeserializationError))?;
+
+        // Decrypt the binary data
+        let cocoon = Cocoon::new(password.as_bytes());
+        let decrypted = cocoon.unwrap(&encrypted).map_err(|e| match e {
+            CocoonErr::Cryptography => EncryptedPreferencesError::DecryptionFailed,
+            _ => EncryptedPreferencesError::from(PreferencesError::DeserializationError),
+        })?;
+
+        // Deserialize the values
+        bincode::deserialize::<HashMap<String, Value>>(&decrypted)
+            .map_err(|_| EncryptedPreferencesError::from(PreferencesError::DeserializationError))
+    }
+
     /// If already exist a preference with the provided name will be loaded otherwise will be
     /// created a new empty one.
     ///
@@ -48,41 +81,17 @@ impl EncryptedPreferences {
     /// * [EncryptedPreferencesError::DecryptionFailed] if the provided password is not valid or the
     /// data is corrupted.
     /// * [PreferencesError::InvalidName] if the provided name contains non ascii alphanumeric chars
-    /// * [PreferencesError::DeserializationError] if the data inside the disc are not valid.
+    /// * [PreferencesError::DeserializationError] if the data inside the disc is not valid.
+    /// * [PreferencesError::IO] if an error occurred while reading the data from the device storage.
     ///
     pub fn new(
         password: &str,
         name: &str,
     ) -> StdResult<EncryptedPreferences, EncryptedPreferencesError> {
-        let read_result = io::load(name);
-
-        let data = if read_result.is_ok() {
-            // Decode the string
-            let encrypted = base64::decode(read_result.unwrap()).map_err(|_| {
-                EncryptedPreferencesError::from(PreferencesError::DeserializationError)
-            })?;
-            // Decrypt the binary data
-            let cocoon = Cocoon::new(password.as_bytes());
-            let decrypted = cocoon.unwrap(&encrypted).map_err(|e| match e {
-                CocoonErr::Cryptography => EncryptedPreferencesError::DecryptionFailed,
-                _ => EncryptedPreferencesError::from(PreferencesError::DeserializationError),
-            })?;
-            // Deserialize the values
-            bincode::deserialize::<HashMap<String, Value>>(&decrypted).map_err(|_| {
-                EncryptedPreferencesError::from(PreferencesError::DeserializationError)
-            })?
-        } else {
-            let err = read_result.err().unwrap();
-            match err {
-                IoError::EmptyData => HashMap::<String, Value>::new(),
-                _ => return Err(EncryptedPreferencesError::from(PreferencesError::IO(err))),
-            }
-        };
-
         Ok(EncryptedPreferences {
             name: name.to_owned(),
             password: password.to_owned(),
-            data,
+            data: EncryptedPreferences::load_from_disk(password, name)?,
         })
     }
 }
@@ -183,6 +192,18 @@ mod test {
 
         assert!(encrypted.is_ok());
         encrypted.unwrap().erase();
+    }
+
+    #[test]
+    pub fn test_invalid_names() {
+        // Check invalid names
+        assert!(EncryptedPreferences::new("", "test-").is_err());
+        assert!(EncryptedPreferences::new("", "test.").is_err());
+        assert!(EncryptedPreferences::new("", "test\\").is_err());
+        assert!(EncryptedPreferences::new("", "test//").is_err());
+        assert!(EncryptedPreferences::new("", "test with spaces").is_err());
+        // Test empty
+        assert!(EncryptedPreferences::new("", "").is_err());
     }
 
     #[test]

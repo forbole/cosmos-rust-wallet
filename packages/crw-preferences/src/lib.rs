@@ -1,10 +1,10 @@
-//! Crate that provides a set of utility to store preferences to the device storage.  
+//! Crate that provides a set of utility to store preferences into the device storage.  
 //!
 //! The values that can be saved into the preference are:
-//! * i32
-//! * bool
-//! * str
-//! * Vec<u8>
+//! * `i32`
+//! * `bool`
+//! * `str`
+//! * `Vec<u8>`
 
 #[macro_use]
 extern crate cfg_if;

@@ -2,6 +2,7 @@
 //! storage.
 
 use crate::io;
+use crate::io::IoError;
 use crate::preferences::{Preferences, PreferencesError, Result};
 use serde_json::{Map, Value};
 
@@ -11,26 +12,24 @@ pub struct UnencryptedPreferences {
 }
 
 impl UnencryptedPreferences {
-    /// Functions to check if the preference set name is valid.
-    /// A name to be valid must contains only ascii alphanumeric chars.
-    ///
-    /// * `name` - The that will be checked.
-    fn is_name_valid(name: &str) -> bool {
-        !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric())
-    }
-
     /// Loads the json preferences from the device storage.
     ///
     /// * `name` - The preferences set name.
     ///
     /// # Errors
-    /// This function returns [PreferencesError::DeserializationError] if the data loaded
-    /// from the disk is not valid.
+    /// This function can return one of the following errors:
+    /// * [PreferencesError::DeserializationError] if the data loaded from the disk is not valid.
+    /// * [PreferencesError::IO] if an error occurred while reading the data from the device storage.
     fn load_from_disk(name: &str) -> Result<Map<String, Value>> {
         let disk_data = io::load(name);
 
         if disk_data.is_err() {
-            return Ok(Map::new());
+            let err = disk_data.err().unwrap();
+            return match err {
+                IoError::EmptyData => Ok(Map::new()),
+                IoError::InvalidName(s) => Err(PreferencesError::InvalidName(s)),
+                _ => Err(PreferencesError::IO(err)),
+            };
         }
 
         Ok(serde_json::from_str(&disk_data.unwrap())
@@ -66,10 +65,6 @@ impl UnencryptedPreferences {
     /// associated with the provided name are invalid.
     ///
     pub fn new(name: &str) -> Result<UnencryptedPreferences> {
-        if !UnencryptedPreferences::is_name_valid(name) {
-            return Err(PreferencesError::InvalidName(name.to_owned()));
-        }
-
         let data = UnencryptedPreferences::load_from_disk(name)?;
 
         Ok(UnencryptedPreferences {
@@ -179,11 +174,6 @@ mod tests {
         assert!(UnencryptedPreferences::new("test with spaces").is_err());
         // Test empty
         assert!(UnencryptedPreferences::new("").is_err());
-
-        // Only ascii alphanumeric are allowed
-        let p = UnencryptedPreferences::new("TeSt42");
-        assert!(p.is_ok());
-        p.unwrap().erase();
     }
 
     #[test]

@@ -19,6 +19,8 @@ use wasm as sys;
 /// Struct that represents a generic I/O error.
 #[derive(Error, Debug)]
 pub enum IoError {
+    #[error("invalid name `{0}`")]
+    InvalidName(String),
     #[error("the preferences are empty")]
     EmptyData,
     #[error("error while reading the data")]
@@ -33,6 +35,13 @@ pub enum IoError {
 
 pub type Result<T> = std::result::Result<T, IoError>;
 
+/// Functions to check if a key used to access the storage is valid.
+///
+/// * `name` - The that will be checked.
+fn is_name_valid(name: &str) -> bool {
+    !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric())
+}
+
 /// Loads a string from the device memory.
 ///
 /// - *name* key that uniquely identify the string that will be loaded.
@@ -42,9 +51,12 @@ pub type Result<T> = std::result::Result<T, IoError>;
 /// * [IoError::Read] - if an error occurred while reading the data from the device storage
 /// * [IoError::EmptyData] - if the data associated to the provided `name` is empty
 /// * [IoError::Unsupported] - if the device don't supports this operation
-#[inline]
 pub fn load(name: &str) -> Result<String> {
-    sys::load(name)
+    if is_name_valid(name) {
+        sys::load(name)
+    } else {
+        Err(IoError::InvalidName(name.to_owned()))
+    }
 }
 
 /// Saves a string into the device memory.
@@ -56,13 +68,17 @@ pub fn load(name: &str) -> Result<String> {
 /// This function can returns one of the following errors:
 /// * [IoError::Write] - if an error occur while writing the data into the device storage
 /// * [IoError::Unsupported] - if the device don't supports this operation
-#[inline]
 pub fn save(name: &str, data: &str) -> Result<()> {
-    sys::save(name, data)
+    if is_name_valid(name) {
+        sys::save(name, data)
+    } else {
+        Err(IoError::InvalidName(name.to_owned()))
+    }
 }
 
 /// Erase the configurations stored into the device memory.
-#[inline]
 pub fn erase(name: &str) {
-    sys::erase(name)
+    if is_name_valid(name) {
+        sys::erase(name)
+    }
 }
