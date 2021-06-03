@@ -14,3 +14,5 @@ inside a new directory **pkg**.
 
 Now go back to the `examples/browser` directory, install the required dependencies with `npm install` and 
 finally launch the demo with `npm start`.
+
+Open a browser and navigate to `http://localhost:8080` to access the web application
