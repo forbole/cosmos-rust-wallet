@@ -12,5 +12,5 @@ After installing these tools move inside the `cosmos-rust-wallet/packages/crw-wa
 `wasm-pack build --release -- --features wasm-bindgen` this will build the wallet and prepare a node module 
 inside a new directory **pkg**.
 
-Now go back to the example directory, install the required dependencies with `npm install` and 
+Now go back to the `examples/browser` directory, install the required dependencies with `npm install` and 
 finally launch the demo with `npm start`.
