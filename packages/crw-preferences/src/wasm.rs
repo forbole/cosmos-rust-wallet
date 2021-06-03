@@ -2,6 +2,7 @@
 
 extern crate bindgen as wasm_bindgen;
 
+use crate::encrypted::{EncryptedPreferences, EncryptedPreferencesError};
 use crate::preferences::{Preferences, PreferencesError};
 use crate::unencrypted::UnencryptedPreferences;
 use wasm_bindgen::prelude::*;
@@ -41,7 +42,7 @@ impl PreferencesWrapper {
         self.container.get_binary(key)
     }
 
-    fn put_binary(&mut self, key: &str, value: &[u8]) -> Result<(), JsValue> {
+    fn put_binary(&mut self, key: &str, value: Vec<u8>) -> Result<(), JsValue> {
         Ok(self.container.put_binary(key, value)?)
     }
 
@@ -67,8 +68,23 @@ pub fn preferences(name: &str) -> Result<PreferencesWrapper, JsValue> {
         .map_err(JsValue::from)
 }
 
+#[wasm_bindgen(js_name = "encryptedPreferences")]
+pub fn encrypted_preferences(password: &str, name: &str) -> Result<PreferencesWrapper, JsValue> {
+    EncryptedPreferences::new(password, name)
+        .map(|container| PreferencesWrapper {
+            container: Box::new(container),
+        })
+        .map_err(JsValue::from)
+}
+
 impl From<PreferencesError> for JsValue {
     fn from(e: PreferencesError) -> Self {
+        JsValue::from(e.to_string())
+    }
+}
+
+impl From<EncryptedPreferencesError> for JsValue {
+    fn from(e: EncryptedPreferencesError) -> Self {
         JsValue::from(e.to_string())
     }
 }
