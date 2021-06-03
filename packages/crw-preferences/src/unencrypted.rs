@@ -1,6 +1,5 @@
-//! Module that implements a unencrypted version of [Preferences].  
-//! The preferences are stored into a map and saved on the device disk as json.
-//! Each preference set must have a name that unique identify them.
+//! Module that provides an implementation of [Preferences] that saves the value into the device
+//! storage.
 
 use crate::io;
 use crate::preferences::{Preferences, PreferencesError, Result};
@@ -119,19 +118,18 @@ impl Preferences for UnencryptedPreferences {
     }
 
     fn get_binary(&self, key: &str) -> Option<Vec<u8>> {
-        self.data.get(key).and_then(|v| v.as_array())
-            .map(|v| {
-                let mut vector: Vec<u8> = Vec::with_capacity(v.len());
-                for value in v {
-                    if value.is_u64() {
-                        vector.push(value.as_u64().unwrap() as u8)
-                    }
+        self.data.get(key).and_then(|v| v.as_array()).map(|v| {
+            let mut vector: Vec<u8> = Vec::with_capacity(v.len());
+            for value in v {
+                if value.is_u64() {
+                    vector.push(value.as_u64().unwrap() as u8)
                 }
-                vector
-            })
+            }
+            vector
+        })
     }
 
-    fn put_binary(&mut self, key: &str, value: &[u8]) -> Result<()> {
+    fn put_binary(&mut self, key: &str, value: Vec<u8>) -> Result<()> {
         self.data.insert(key.to_owned(), Value::from(value));
         Ok(())
     }
@@ -196,7 +194,7 @@ mod tests {
         assert!(preferences.put_i32("i32", 42).is_ok());
         assert!(preferences.put_str("str", "str".to_owned()).is_ok());
         assert!(preferences.put_bool("bool", true).is_ok());
-        assert!(preferences.put_binary("bin", &test_vec).is_ok());
+        assert!(preferences.put_binary("bin", test_vec.clone()).is_ok());
 
         // Write data to disk
         preferences.save().unwrap();

@@ -1,4 +1,4 @@
-//! Module that provides a generic trait to store and load a set of values.
+//! Module that provides the generic trait to store and load preferences from the device storage.
 
 use crate::io::IoError;
 use std::result;
@@ -62,7 +62,7 @@ pub trait Preferences {
     ///
     /// - *key* The name of the preference that will be stored.
     /// - *value* The array that will be stored into the preferences.
-    fn put_binary(&mut self, key: &str, value: &[u8]) -> Result<()>;
+    fn put_binary(&mut self, key: &str, value: Vec<u8>) -> Result<()>;
 
     /// Delete all the preferences currently loaded.
     fn clear(&mut self);
