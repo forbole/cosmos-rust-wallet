@@ -57,7 +57,7 @@ impl UnencryptedPreferences {
     /// If already exist a preference with the provided name will be loaded otherwise will be
     /// created a new empty one.
     ///
-    /// * `name` - The preferences name, can contains only ascii alphanumeric chars.
+    /// * `name` - The preferences name, can contains only ascii alphanumeric chars or -, _.
     ///
     /// # Errors
     /// This function returns [PreferencesError::InvalidName] if the provided name contains

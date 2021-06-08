@@ -39,12 +39,16 @@ pub type Result<T> = std::result::Result<T, IoError>;
 ///
 /// * `name` - The that will be checked.
 fn is_name_valid(name: &str) -> bool {
-    !name.is_empty() && name.chars().all(|c| c.is_ascii_alphanumeric())
+    !name.is_empty()
+        && name
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || ['-', '_'].contains(&c))
 }
 
 /// Loads a string from the device memory.
 ///
-/// - *name* key that uniquely identify the string that will be loaded.
+/// - *name* key that uniquely identify the string that will be loaded.  
+///   The `name` key can contain only ascii alphanumeric characters or -, _.
 ///
 /// # Errors
 /// This function can returns one of the following errors:
@@ -61,7 +65,8 @@ pub fn load(name: &str) -> Result<String> {
 
 /// Saves a string into the device memory.
 ///
-/// - *name* key that uniquely identify the data that will be stored.
+/// - *name* key that uniquely identify the data that will be stored.  
+/// The `name` key can contain only ascii alphanumeric characters or -, _.
 /// - *data* The string that will be stored into the device storage.
 ///
 /// # Errors
