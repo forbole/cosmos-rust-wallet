@@ -15,6 +15,8 @@ bincode = "1.3.3"
 cfg-if = "1.0.0"
 thiserror = "1.0.25"
 base64 = "0.13.0"
+ffi_helpers = { version = "0.2.0", optional = true }
+libc = { version = "0.2.94", optional = true }
 
 
 [target.'cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))'.dependencies]
@@ -32,3 +34,4 @@ package = "wasm-bindgen"
 
 [features]
 js = ["web-sys", "bindgen", "rand/wasm-bindgen"]
+ffi = ["ffi_helpers", "libc"]
