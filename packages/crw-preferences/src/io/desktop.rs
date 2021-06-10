@@ -33,7 +33,7 @@ fn get_config_file(name: &str, create: bool) -> StdResult<PathBuf, std::io::Erro
         }
         else {
             // The application name is resolved as compile from the cargo project name.
-            let bin_name: &'static str = env!("CARGO_BIN_NAME");
+            let bin_name: &'static str = env!("CARGO_BIN_NAME", "to build the library for desktop must be defined the CARGO_BIN_NAME environment variable in order to generate the directory where will be stored the configurations");
 
             let mut config_dir = dirs::config_dir().unwrap();
             // Append the binary name to the default config dir
