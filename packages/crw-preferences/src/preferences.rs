@@ -71,6 +71,6 @@ pub trait Preferences {
     /// device storage.
     fn erase(&mut self);
 
-    /// Saves the preferences on the device disk.
+    /// Saves the preferences into the device disk.
     fn save(&self) -> Result<()>;
 }
