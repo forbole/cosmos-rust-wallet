@@ -4,7 +4,7 @@ use crate::encrypted::EncryptedPreferences;
 use crate::preferences::Preferences;
 use crate::unencrypted::UnencryptedPreferences;
 use ffi_helpers;
-use libc::{c_char, c_uchar, c_void};
+use libc::{c_char, c_int, c_uchar, c_void};
 use std::ptr::null_mut;
 use std::slice;
 
@@ -131,7 +131,7 @@ pub extern "C" fn preferences_get_i32(
     preferences: *const c_void,
     key: *const c_char,
     out: *mut i32,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() || out.is_null() {
         return -2;
     }
@@ -158,8 +158,8 @@ pub extern "C" fn preferences_get_i32(
 pub extern "C" fn preferences_put_i32(
     preferences: *mut c_void,
     key: *const c_char,
-    value: i32,
-) -> i32 {
+    value: c_int32,
+) -> c_int {
     if preferences.is_null() {
         return -1;
     }
@@ -190,7 +190,7 @@ pub extern "C" fn preferences_get_string(
     key: *const c_char,
     out_buf: *mut c_uchar,
     len: usize,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() {
         return -1;
     }
@@ -207,7 +207,7 @@ pub extern "C" fn preferences_get_string(
                     unsafe { slice::from_raw_parts_mut(out_buf as *mut u8, bytes.len()) };
                 out_slice.copy_from_slice(s.as_bytes())
             }
-            s.len() as i32
+            s.len() as c_int
         }
         None => 0,
     }
@@ -225,7 +225,7 @@ pub extern "C" fn preferences_put_string(
     preferences: *mut c_void,
     key: *const c_char,
     value: *const c_char,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() {
         return -1;
     }
@@ -256,7 +256,7 @@ pub extern "C" fn preferences_get_bool(
     preferences: *const c_void,
     key: *const c_char,
     out: *mut bool,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() || out.is_null() {
         return -2;
     }
@@ -284,7 +284,7 @@ pub extern "C" fn preferences_put_bool(
     preferences: *mut c_void,
     key: *const c_char,
     value: bool,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() {
         return -1;
     }
@@ -315,7 +315,7 @@ pub extern "C" fn preferences_get_binary(
     key: *const c_char,
     out_buf: *mut u8,
     buf_len: usize,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() || out_buf.is_null() {
         return -1;
     }
@@ -330,7 +330,7 @@ pub extern "C" fn preferences_get_binary(
                 let dest: &mut [u8] = unsafe { slice::from_raw_parts_mut(out_buf, v.len()) };
                 dest.copy_from_slice(v.as_slice());
             }
-            v.len() as i32
+            v.len() as c_int
         }
         None => 0,
     }
@@ -350,7 +350,7 @@ pub extern "C" fn preferences_put_binary(
     key: *const c_char,
     value: *const u8,
     len: usize,
-) -> i32 {
+) -> c_int {
     if preferences.is_null() || value.is_null() {
         return -1;
     }
@@ -374,7 +374,7 @@ pub extern "C" fn preferences_put_binary(
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
-pub extern "C" fn preferences_clear(preferences: *mut c_void) -> i32 {
+pub extern "C" fn preferences_clear(preferences: *mut c_void) -> c_int {
     if preferences.is_null() {
         return -1;
     }
@@ -391,7 +391,7 @@ pub extern "C" fn preferences_clear(preferences: *mut c_void) -> i32 {
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
-pub extern "C" fn preferences_erase(preferences: *mut c_void) -> i32 {
+pub extern "C" fn preferences_erase(preferences: *mut c_void) -> c_int {
     if preferences.is_null() {
         return -1;
     }
@@ -407,7 +407,7 @@ pub extern "C" fn preferences_erase(preferences: *mut c_void) -> i32 {
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
-pub extern "C" fn preferences_save(preferences: *mut c_void) -> i32 {
+pub extern "C" fn preferences_save(preferences: *mut c_void) -> c_int {
     if preferences.is_null() {
         return -1;
     }
