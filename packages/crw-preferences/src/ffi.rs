@@ -63,6 +63,21 @@ fn unwrap_ptr(ptr: *const c_void) -> *const Box<dyn Preferences> {
 fn unwrap_ptr_mut(ptr: *mut c_void) -> *mut Box<dyn Preferences> {
     ptr as *mut Box<dyn Preferences>
 }
+/// Sets the application directory where will be stored the configurations.
+/// On windows, macOS and linux `dir` should be only the name of the directory that will
+/// be created inside the current user app configurations directory.
+/// On Android instead since is not possible to obtain the `appData` directory at runtime
+/// `dir` must be an absolute path to a directory where the application can read and write.
+///
+/// Returns 0 on success or -1 on error.
+#[no_mangle]
+pub extern "C" fn set_preferences_app_dir(dir: *const c_char) -> c_int {
+    let path = check_str!(dir, -1);
+
+    crate::preferences::set_preferences_app_dir(path);
+
+    0
+}
 
 /// Creates a new preferences with the provided name or load an already existing preferences
 /// with the provided name.
@@ -158,7 +173,7 @@ pub extern "C" fn preferences_get_i32(
 pub extern "C" fn preferences_put_i32(
     preferences: *mut c_void,
     key: *const c_char,
-    value: c_int32,
+    value: i32,
 ) -> c_int {
     if preferences.is_null() {
         return -1;

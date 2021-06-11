@@ -5,9 +5,17 @@
 //! * linux.
 
 use crate::io::{IoError, Result};
+use once_cell::sync::Lazy;
+use std::fs;
 use std::fs::File;
 use std::path::PathBuf;
-use std::{fs, result::Result as StdResult};
+use std::sync::Mutex;
+
+/// Global variable that contains the directory name where will be stored the configurations files.
+static PREFERENCES_APP_DIR: Lazy<Mutex<String>> = Lazy::new(|| {
+    let str = option_env!("CARGO_BIN_NAME").unwrap_or("").to_owned();
+    Mutex::new(str)
+});
 
 /// Gets a file with the provided name from the application configuration directory.
 ///
@@ -25,19 +33,30 @@ use std::{fs, result::Result as StdResult};
 /// # Errors
 ///
 /// This function return an [std::io::Error] if the file can't be created inside the configuration directory.
-fn get_config_file(name: &str, create: bool) -> StdResult<PathBuf, std::io::Error> {
+fn get_config_file(name: &str, create: bool) -> Result<PathBuf> {
     cfg_if! {
         if #[cfg(test)] {
             // In test mode just use the current working directory.
             let mut config_dir = PathBuf::new();
         }
+        else if #[cfg(target_os = "android")] {
+            // On android we can't obtain the path at runtime so the app dir must be an
+            // absolute path to the directory where will be stored the configurations.
+            let dir = PREFERENCES_APP_DIR.lock().unwrap();
+            if dir.is_empty() {
+                return Err(IoError::EmptyPreferencesPath);
+            }
+            let mut config_dir = PathBuf::from(dir.as_str());
+        }
         else {
             // The application name is resolved as compile from the cargo project name.
-            let bin_name: &'static str = env!("CARGO_BIN_NAME", "to build the library for desktop must be defined the CARGO_BIN_NAME environment variable in order to generate the directory where will be stored the configurations");
-
+            let dir = PREFERENCES_APP_DIR.lock().unwrap();
+            if dir.is_empty() {
+                return Err(IoError::EmptyPreferencesPath);
+            }
             let mut config_dir = dirs::config_dir().unwrap();
             // Append the binary name to the default config dir
-            config_dir.push(bin_name);
+            config_dir.push(dir.as_str());
             // Check if the directory exists, if not create it.
             if !config_dir.exists() {
                 fs::create_dir_all(config_dir.as_path())?;
@@ -55,6 +74,17 @@ fn get_config_file(name: &str, create: bool) -> StdResult<PathBuf, std::io::Erro
     Ok(config_dir)
 }
 
+/// Sets the application directory where will be stored the configurations.
+/// On windows, macOS and linux `dir` should be only the name of the directory that will
+/// be create inside the current user app configurations directory.
+/// On Android instead since is not possible to obtain the `appData` directory at runtime
+/// `dir` must be an absolute path to a directory where the application can read and write.
+pub fn set_preferences_app_dir(dir: &str) {
+    let mut str = PREFERENCES_APP_DIR.lock().unwrap();
+    str.clear();
+    str.push_str(dir);
+}
+
 /// Loads data from the file with the provided name.
 ///
 /// * `name` - Name of the configuration file from which will be loaded the data.
@@ -64,16 +94,14 @@ fn get_config_file(name: &str, create: bool) -> StdResult<PathBuf, std::io::Erro
 /// * [IoError::Read] if the file with the provided `name` can't be read
 /// * [IoError::EmptyData] if the file is empty
 pub fn load(name: &str) -> Result<String> {
-    get_config_file(name, true)
-        .and_then(fs::read_to_string)
-        .map_err(|_| IoError::Read)
-        .and_then(|data| {
-            if data.is_empty() {
-                Err(IoError::EmptyData)
-            } else {
-                Ok(data)
-            }
-        })
+    let config_file = get_config_file(name, true)?;
+    let content = fs::read_to_string(config_file)?;
+
+    if content.is_empty() {
+        Err(IoError::EmptyData)
+    } else {
+        Ok(content)
+    }
 }
 
 /// Saves `data` into the configuration file with the provided `name`.
@@ -84,9 +112,9 @@ pub fn load(name: &str) -> Result<String> {
 /// # Errors
 /// This function returns [IoError::Write] if can't write to the file with the provided `name`.
 pub fn save(name: &str, data: &str) -> Result<()> {
-    get_config_file(name, true)
-        .and_then(|path| fs::write(path, data))
-        .map_err(|_| IoError::Write)
+    let config_file = get_config_file(name, true)?;
+    fs::write(config_file, data)?;
+    Ok(())
 }
 
 /// Deletes the file with the provide `name` from the device storage.

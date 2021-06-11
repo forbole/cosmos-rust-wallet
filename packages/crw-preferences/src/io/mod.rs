@@ -5,11 +5,30 @@
 //! * linux
 //! * wasm32 on browser
 
+use std::io::{Error as StdIoError, Error};
 use thiserror::Error;
-#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
-mod desktop;
-#[cfg(any(target_os = "linux", target_os = "windows", target_os = "macos"))]
-use desktop as sys;
+#[cfg(any(
+    target_os = "linux",
+    target_os = "windows",
+    target_os = "macos",
+    target_os = "android"
+))]
+mod native;
+#[cfg(any(
+    target_os = "linux",
+    target_os = "windows",
+    target_os = "macos",
+    target_os = "android"
+))]
+use native as sys;
+
+#[cfg(any(
+    target_os = "linux",
+    target_os = "windows",
+    target_os = "macos",
+    target_os = "android"
+))]
+pub use native::set_preferences_app_dir;
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js",))]
 mod wasm;
@@ -19,6 +38,10 @@ use wasm as sys;
 /// Struct that represents a generic I/O error.
 #[derive(Error, Debug)]
 pub enum IoError {
+    #[error("io error `{0}`")]
+    Std(StdIoError),
+    #[error("the preferences app directory was not initialized")]
+    EmptyPreferencesPath,
     #[error("invalid name `{0}`")]
     InvalidName(String),
     #[error("the preferences are empty")]
@@ -85,5 +108,11 @@ pub fn save(name: &str, data: &str) -> Result<()> {
 pub fn erase(name: &str) {
     if is_name_valid(name) {
         sys::erase(name)
+    }
+}
+
+impl From<StdIoError> for IoError {
+    fn from(e: Error) -> Self {
+        IoError::Std(e)
     }
 }

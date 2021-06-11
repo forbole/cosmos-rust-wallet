@@ -4,6 +4,14 @@ use crate::io::IoError;
 use std::result;
 use thiserror::Error;
 
+#[cfg(any(
+    target_os = "linux",
+    target_os = "windows",
+    target_os = "macos",
+    target_os = "android"
+))]
+pub use crate::io::set_preferences_app_dir;
+
 pub type Result<T> = result::Result<T, PreferencesError>;
 
 #[derive(Error, Debug)]
