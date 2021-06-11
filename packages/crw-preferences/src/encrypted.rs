@@ -132,14 +132,14 @@ impl Preferences for EncryptedPreferences {
         Ok(())
     }
 
-    fn get_binary(&self, key: &str) -> Option<Vec<u8>> {
+    fn get_bytes(&self, key: &str) -> Option<Vec<u8>> {
         self.data.get(key).and_then(|v| match v {
             Value::Bin(bin) => Some(bin.to_owned()),
             _ => None,
         })
     }
 
-    fn put_binary(&mut self, key: &str, value: Vec<u8>) -> Result<()> {
+    fn put_bytes(&mut self, key: &str, value: Vec<u8>) -> Result<()> {
         self.data.insert(key.to_owned(), Value::Bin(value));
         Ok(())
     }
@@ -220,7 +220,7 @@ mod test {
             )
             .is_ok());
         assert!(preferences.put_bool("bool", true).is_ok());
-        assert!(preferences.put_binary("bin", test_vec.clone()).is_ok());
+        assert!(preferences.put_bytes("bin", test_vec.clone()).is_ok());
 
         // Write data to disk
         preferences.save().unwrap();
@@ -230,7 +230,7 @@ mod test {
         let i32_result = preferences.get_i32("i32");
         let str_result = preferences.get_str("str");
         let bool_result = preferences.get_bool("bool");
-        let binary_result = preferences.get_binary("bin");
+        let binary_result = preferences.get_bytes("bin");
 
         // Delete the file from the disk to avoid that some date remain on the disk if the
         // test fails.

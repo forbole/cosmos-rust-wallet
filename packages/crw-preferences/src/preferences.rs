@@ -56,13 +56,13 @@ pub trait Preferences {
     /// Gets an array of bytes from the preferences.
     ///
     /// * `key` - name of the preference that will be loaded.
-    fn get_binary(&self, key: &str) -> Option<Vec<u8>>;
+    fn get_bytes(&self, key: &str) -> Option<Vec<u8>>;
 
     /// Store an array of bytes into the preferences.
     ///
     /// - *key* The name of the preference that will be stored.
     /// - *value* The array that will be stored into the preferences.
-    fn put_binary(&mut self, key: &str, value: Vec<u8>) -> Result<()>;
+    fn put_bytes(&mut self, key: &str, value: Vec<u8>) -> Result<()>;
 
     /// Delete all the preferences currently loaded.
     fn clear(&mut self);

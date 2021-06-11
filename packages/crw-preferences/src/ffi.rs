@@ -310,7 +310,7 @@ pub extern "C" fn preferences_put_bool(
 /// Returns the number of bytes that would have been written if `out_buf` had been sufficiently large,
 /// 0 if the value is not present into the preferences or -1 on error.
 #[no_mangle]
-pub extern "C" fn preferences_get_binary(
+pub extern "C" fn preferences_get_bytes(
     preferences: *const c_void,
     key: *const c_char,
     out_buf: *mut u8,
@@ -323,7 +323,7 @@ pub extern "C" fn preferences_get_binary(
     let key = check_str!(key, -1);
     let preferences = unsafe { unwrap_ptr(preferences).as_ref().unwrap() };
 
-    match preferences.get_binary(key) {
+    match preferences.get_bytes(key) {
         Some(v) => {
             if v.len() <= buf_len {
                 // The buffer is large enough copy the vec to the dest buffer
@@ -345,7 +345,7 @@ pub extern "C" fn preferences_get_binary(
 ///
 /// Return 0 on on success, -1 on error.
 #[no_mangle]
-pub extern "C" fn preferences_put_binary(
+pub extern "C" fn preferences_put_bytes(
     preferences: *mut c_void,
     key: *const c_char,
     value: *const u8,
@@ -359,7 +359,7 @@ pub extern "C" fn preferences_put_binary(
     let preferences = unsafe { unwrap_ptr_mut(preferences).as_mut().unwrap() };
     let value = unsafe { slice::from_raw_parts(value, len) };
 
-    match preferences.put_binary(key, value.to_owned()) {
+    match preferences.put_bytes(key, value.to_owned()) {
         Ok(_) => 0,
         Err(e) => {
             ffi_helpers::update_last_error(e);
@@ -426,8 +426,8 @@ pub extern "C" fn preferences_save(preferences: *mut c_void) -> c_int {
 mod tests {
     use crate::ffi::{
         encrypted_preferences, preferences, preferences_erase, preferences_free,
-        preferences_get_binary, preferences_get_bool, preferences_get_i32, preferences_get_string,
-        preferences_put_binary, preferences_put_bool, preferences_put_i32, preferences_put_string,
+        preferences_get_bool, preferences_get_bytes, preferences_get_i32, preferences_get_string,
+        preferences_put_bool, preferences_put_bytes, preferences_put_i32, preferences_put_string,
         preferences_save,
     };
     use std::ffi::CString;
@@ -545,11 +545,11 @@ mod tests {
         let key = CString::new("bin").unwrap();
         let bin = [1u8, 2, 4, 5];
         let insert_rc =
-            preferences_put_binary(raw_preferences, key.as_ptr(), bin.as_ptr(), bin.len());
+            preferences_put_bytes(raw_preferences, key.as_ptr(), bin.as_ptr(), bin.len());
         assert_eq!(0, insert_rc);
 
         let mut read_buf = [0u8; 10];
-        let read_rc = preferences_get_binary(
+        let read_rc = preferences_get_bytes(
             raw_preferences,
             key.as_ptr(),
             read_buf.as_mut_ptr(),

@@ -38,12 +38,12 @@ impl PreferencesWrapper {
         Ok(self.container.put_bool(key, value)?)
     }
 
-    fn get_binary(&self, key: &str) -> Option<Vec<u8>> {
-        self.container.get_binary(key)
+    fn get_bytes(&self, key: &str) -> Option<Vec<u8>> {
+        self.container.get_bytes(key)
     }
 
-    fn put_binary(&mut self, key: &str, value: Vec<u8>) -> Result<(), JsValue> {
-        Ok(self.container.put_binary(key, value)?)
+    fn put_bytes(&mut self, key: &str, value: Vec<u8>) -> Result<(), JsValue> {
+        Ok(self.container.put_bytes(key, value)?)
     }
 
     pub fn clear(&mut self) {
