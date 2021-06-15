@@ -196,7 +196,6 @@ mod test {
     #[test]
     pub fn test_invalid_names() {
         // Check invalid names
-        assert!(EncryptedPreferences::new("", "test-").is_err());
         assert!(EncryptedPreferences::new("", "test.").is_err());
         assert!(EncryptedPreferences::new("", "test\\").is_err());
         assert!(EncryptedPreferences::new("", "test//").is_err());
