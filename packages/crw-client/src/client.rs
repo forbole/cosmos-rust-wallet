@@ -11,13 +11,12 @@ use cosmos_sdk_proto::cosmos::{
 };
 use reqwest::{get, StatusCode};
 use tonic::codegen::http::uri::InvalidUri;
-use tonic::transport::Endpoint;
-use tonic::{codegen::http::Uri, transport::Channel, Request};
+use tonic::Request;
 
 /// Client to communicate with a full node.
 #[derive(Clone)]
 pub struct CosmosClient {
-    grpc_channel: Endpoint,
+    grpc_addr: String,
     lcd_addr: String,
 }
 
@@ -26,24 +25,18 @@ impl CosmosClient {
     /// The client will communicate using `lcd_address` for the legacy LCD requests
     /// and `grpc_addr` for the new gRPC request.
     ///
-    /// # Errors
-    /// Returns an [`Err`] if `grpc_addr` is an invalid URI.
-    ///
     ///# Examples
     ///
     /// ```
     ///  use crw_client::client::CosmosClient;
     ///
-    ///  let client = CosmosClient::new("http://localhost:1317", "http://localhost:9090").unwrap();
+    ///  let client = CosmosClient::new("http://localhost:1317", "http://localhost:9090");
     /// ```
-    pub fn new(lcd_addr: &str, grpc_addr: &str) -> Result<CosmosClient, InvalidUri> {
-        let grpc_uri = grpc_addr.parse::<Uri>()?;
-        let grpc_channel = Channel::builder(grpc_uri);
-
-        Ok(CosmosClient {
-            grpc_channel,
+    pub fn new(lcd_addr: &str, grpc_addr: &str) -> CosmosClient {
+        CosmosClient {
+            grpc_addr: grpc_addr.to_string(),
             lcd_addr: lcd_addr.to_string(),
-        })
+        }
     }
 
     /// Gets the information of a full node.
@@ -67,15 +60,8 @@ impl CosmosClient {
 
     /// Returns the account data associated to the given address.
     pub async fn get_account_data(&self, address: &str) -> Result<BaseAccount, CosmosError> {
-        // Create channel connection to the gRPC server
-        let channel = self
-            .grpc_channel
-            .connect()
-            .await
-            .map_err(|err| CosmosError::Grpc(err.to_string()))?;
-
-        // Create gRPC query auth client from channel
-        let mut client = QueryClient::new(channel);
+        let w_client = grpc_web_client::Client::new(self.grpc_addr.clone());
+        let mut client = QueryClient::new(w_client);
 
         // Build a new request
         let request = Request::new(QueryAccountRequest {
@@ -123,13 +109,8 @@ impl CosmosClient {
         };
         prost::Message::encode(&tx_raw, &mut serialized_tx)?;
 
-        // Open the channel and perform the actual gRPC BroadcastTxRequest
-        let channel = self
-            .grpc_channel
-            .connect()
-            .await
-            .map_err(|err| CosmosError::Grpc(err.to_string()))?;
-        let mut service = ServiceClient::new(channel);
+        let w_client = grpc_web_client::Client::new(self.grpc_addr.clone());
+        let mut service = ServiceClient::new(w_client);
 
         let request = Request::new(BroadcastTxRequest {
             tx_bytes: serialized_tx,
