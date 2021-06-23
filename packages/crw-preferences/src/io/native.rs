@@ -127,3 +127,14 @@ pub fn erase(name: &str) {
         }
     }
 }
+
+/// Check if exist a file with the provided `name` into the device storage.
+pub fn exist(name: &str) -> bool {
+    let path = get_config_file(name, false);
+
+    if path.is_err() {
+        return false;
+    } else {
+        path.unwrap().exists()
+    }
+}

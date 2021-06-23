@@ -111,6 +111,15 @@ pub fn erase(name: &str) {
     }
 }
 
+/// Check if exist a string withe the provided name into the device storage.
+pub fn exist(name: &str) -> bool {
+    if !is_name_valid(name) {
+        return false;
+    }
+
+    sys::exist(name)
+}
+
 impl From<StdIoError> for IoError {
     fn from(e: Error) -> Self {
         IoError::Std(e)

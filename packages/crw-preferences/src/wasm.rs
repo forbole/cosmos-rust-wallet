@@ -3,6 +3,7 @@
 extern crate bindgen as wasm_bindgen;
 
 use crate::encrypted::{EncryptedPreferences, EncryptedPreferencesError};
+use crate::preferences;
 use crate::preferences::{Preferences, PreferencesError};
 use crate::unencrypted::UnencryptedPreferences;
 use wasm_bindgen::prelude::*;
@@ -57,6 +58,16 @@ impl PreferencesWrapper {
     pub fn save(&self) -> Result<(), JsValue> {
         Ok(self.container.save()?)
     }
+}
+
+#[wasm_bindgen]
+pub fn exist(name: &str) {
+    preferences::exist(name);
+}
+
+#[wasm_bindgen]
+pub fn delete(name: &str) {
+    preferences::delete(name);
 }
 
 #[wasm_bindgen(js_name = "preferences")]

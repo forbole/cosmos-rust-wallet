@@ -59,3 +59,22 @@ pub fn erase(name: &str) {
         let _ = Storage::set_item(&storage, name, "");
     }
 }
+
+/// Check if is present a non empty string into the browser `LocalStorage`.
+pub fn exist(name: &str) -> bool {
+    let storage = get_storage();
+
+    return if storage.is_err() {
+        false
+    } else {
+        let storage = storage.unwrap();
+        let item_result = Storage::get_item(&storage, name);
+
+        if item_result.is_err() {
+            false
+        } else {
+            let item = item_result.unwrap().unwrap_or("".to_owned());
+            !item.is_empty()
+        }
+    };
+}

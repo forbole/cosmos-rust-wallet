@@ -1,6 +1,7 @@
 //! Module that provides the FFI to access the preferences from other programming languages.
 
 use crate::encrypted::EncryptedPreferences;
+use crate::preferences;
 use crate::preferences::Preferences;
 use crate::unencrypted::UnencryptedPreferences;
 use ffi_helpers;
@@ -77,6 +78,22 @@ pub extern "C" fn set_preferences_app_dir(dir: *const c_char) -> c_int {
     crate::preferences::set_preferences_app_dir(path);
 
     0
+}
+
+/// Check if exist a preference with the provided `name`.
+#[no_mangle]
+pub extern "C" fn preferences_exist(name: *const c_char) -> bool {
+    let name = check_str!(name, false);
+
+    preferences::exist(name)
+}
+
+/// Deletes a preferences from the device storage.
+#[no_mangle]
+pub extern "C" fn preferences_delete(name: *const c_char) {
+    let name = check_str!(name, ());
+
+    preferences::delete(name);
 }
 
 /// Creates a new preferences with the provided name or load an already existing preferences

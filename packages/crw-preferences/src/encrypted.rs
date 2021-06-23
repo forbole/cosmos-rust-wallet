@@ -183,6 +183,7 @@ impl From<PreferencesError> for EncryptedPreferencesError {
 #[cfg(test)]
 mod test {
     use crate::encrypted::EncryptedPreferences;
+    use crate::preferences;
     use crate::preferences::Preferences;
 
     #[test]
@@ -241,5 +242,17 @@ mod test {
         );
         assert_eq!(true, bool_result.unwrap());
         assert_eq!(test_vec, binary_result.unwrap());
+    }
+
+    #[test]
+    pub fn test_exist() {
+        let set_name = "encrypted-exist";
+
+        let mut p = EncryptedPreferences::new("password", set_name).unwrap();
+        p.save();
+
+        assert!(preferences::exist(set_name));
+
+        p.erase();
     }
 }

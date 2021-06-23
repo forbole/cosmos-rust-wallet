@@ -1,5 +1,6 @@
 //! Module that provides the generic trait to store and load preferences from the device storage.
 
+use crate::io;
 use crate::io::IoError;
 use std::result;
 use thiserror::Error;
@@ -81,4 +82,14 @@ pub trait Preferences {
 
     /// Saves the preferences into the device disk.
     fn save(&self) -> Result<()>;
+}
+
+/// Deletes a preferences from the device storage
+pub fn delete(name: &str) {
+    io::erase(name);
+}
+
+/// Checks if exists a preferences with the provided `name`.
+pub fn exist(name: &str) -> bool {
+    io::exist(name)
 }

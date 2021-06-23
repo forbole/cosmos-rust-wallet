@@ -145,6 +145,7 @@ impl Preferences for UnencryptedPreferences {
 
 #[cfg(test)]
 mod tests {
+    use crate::preferences;
     use crate::preferences::Preferences;
     use crate::unencrypted::UnencryptedPreferences;
 
@@ -202,5 +203,17 @@ mod tests {
         assert_eq!("str", str_result.unwrap());
         assert_eq!(true, bool_result.unwrap());
         assert_eq!(test_vec, binary_result.unwrap());
+    }
+
+    #[test]
+    pub fn test_exist() {
+        let set_name = "unencrypted-exist";
+
+        let mut p = UnencryptedPreferences::new(set_name).unwrap();
+        p.save();
+
+        assert!(preferences::exist(set_name));
+
+        p.erase();
     }
 }
