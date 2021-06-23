@@ -18,4 +18,4 @@ debug = false
 debug-assertions = false
 
 [patch.crates-io]
-cosmos-sdk-proto = { git = "https://github.com/shravanshetty1/cosmos-rust", branch = "wasm"}
+cosmos-sdk-proto = { git = "https://github.com/shravanshetty1/cosmos-rust", branch = "wasm2"}
