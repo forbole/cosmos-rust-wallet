@@ -24,5 +24,4 @@ thiserror = "1.0.24"
 grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", branch = "main" }
 
 [dev-dependencies]
-#actix-rt = "2.0.2"
 wasm-bindgen-test = "0.3.20"

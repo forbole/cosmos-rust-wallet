@@ -136,7 +136,7 @@ mod tests {
     static TEST_MNEMONIC: &str = "elephant luggage finger obscure nest smooth flag clay recycle unfair capital category organ bicycle gallery sight canyon hotel dutch skull today pink scale aisle";
     static DESMOS_DERIVATION_PATH: &str = "m/44'/852'/0'/0/0";
 
-    #[actix_rt::test]
+    #[test]
     async fn node_info() {
         let cosmos_client =
             CosmosClient::new("http://localhost:1317", "http://localhost:9090").unwrap();
@@ -147,7 +147,7 @@ mod tests {
         assert_eq!("testchain", info.unwrap().network);
     }
 
-    #[actix_rt::test]
+    #[test]
     async fn broadcast_tx() {
         let wallet = MnemonicWallet::new(TEST_MNEMONIC, DESMOS_DERIVATION_PATH).unwrap();
 
