@@ -15,14 +15,14 @@ crate-type = ["cdylib", "lib"]
 cosmos-sdk-proto = { version = "0.5.0"}
 prost = { version = "0.7.0"}
 prost-types = { version = "0.7" }
-reqwest = { version = "0.11.0", features = ["blocking", "json"]}
+reqwest = { version = "=0.10.10", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.62" }
-tonic = { version = "0.4.1", default-features = false, features = ["codegen", "prost"] }
+tonic = { version = "0.4.1", default-features = false }
 crw-wallet = { path = "../../packages/crw-wallet", version = "0.1.0" }
 thiserror = "1.0.24"
 grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", branch = "main" }
 
 [dev-dependencies]
-actix-rt = "2.0.2"
+#actix-rt = "2.0.2"
 wasm-bindgen-test = "0.3.20"

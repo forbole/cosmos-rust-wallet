@@ -10,7 +10,6 @@ use cosmos_sdk_proto::cosmos::{
     tx::v1beta1::{service_client::ServiceClient, BroadcastMode, BroadcastTxRequest, Tx, TxRaw},
 };
 use reqwest::{get, StatusCode};
-use tonic::codegen::http::uri::InvalidUri;
 use tonic::Request;
 
 /// Client to communicate with a full node.
