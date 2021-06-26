@@ -38,6 +38,25 @@ impl CosmosClient {
         }
     }
 
+    #[cfg(not(target_arch = "wasm32"))]
+    pub async fn grpc_client(&self) -> Result<tonic::transport::Channel, CosmosError> {
+        let grpc_uri = self
+            .grpc_addr
+            .parse::<tonic::codegen::http::Uri>()
+            .map_err(|err| CosmosError::Grpc(err.to_string()))?;
+        let grpc_channel = tonic::transport::Channel::builder(grpc_uri);
+
+        Ok(grpc_channel
+            .connect()
+            .await
+            .map_err(|err| CosmosError::Grpc(err.to_string()))?)
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub async fn grpc_client(&self) -> Result<grpc_web_client::Client, CosmosError> {
+        Ok(grpc_web_client::Client::new(self.grpc_addr.clone()))
+    }
+
     /// Gets the information of a full node.
     pub async fn node_info(&self) -> Result<NodeInfo, CosmosError> {
         let endpoint = format!("{}{}", self.lcd_addr, "/node_info");
@@ -59,8 +78,7 @@ impl CosmosClient {
 
     /// Returns the account data associated to the given address.
     pub async fn get_account_data(&self, address: &str) -> Result<BaseAccount, CosmosError> {
-        let w_client = grpc_web_client::Client::new(self.grpc_addr.clone());
-        let mut client = QueryClient::new(w_client);
+        let mut client = QueryClient::new(self.grpc_client().await?);
 
         // Build a new request
         let request = Request::new(QueryAccountRequest {
@@ -108,8 +126,7 @@ impl CosmosClient {
         };
         prost::Message::encode(&tx_raw, &mut serialized_tx)?;
 
-        let w_client = grpc_web_client::Client::new(self.grpc_addr.clone());
-        let mut service = ServiceClient::new(w_client);
+        let mut service = ServiceClient::new(self.grpc_client().await?);
 
         let request = Request::new(BroadcastTxRequest {
             tx_bytes: serialized_tx,
