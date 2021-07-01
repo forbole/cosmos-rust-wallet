@@ -132,9 +132,9 @@ pub fn erase(name: &str) {
 pub fn exist(name: &str) -> bool {
     let path = get_config_file(name, false);
 
-    if path.is_err() {
-        return false;
+    if let Ok(p) = path {
+        p.exists()
     } else {
-        path.unwrap().exists()
+        false
     }
 }
