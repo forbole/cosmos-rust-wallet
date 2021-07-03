@@ -20,13 +20,13 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0.62" }
 crw-wallet = { path = "../../packages/crw-wallet", version = "0.1.0" }
 thiserror = "1.0.24"
-tonic = { version = "0.4.1", default-features = false }
-grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", branch = "main", optional = true }
 
-[features]
-default = ["non-wasm"]
-wasm = ["grpc-web-client"]
-non-wasm = ["tonic/transport"]
+[target.'cfg(not(all(target_arch = "wasm32", target_os = "unknown")))'.dependencies]
+tonic = { version = "0.4.1", features = ["transport"] }
+
+[target.'cfg(all(target_arch = "wasm32", target_os = "unknown"))'.dependencies]
+tonic = { version = "0.4.1", default-features = false }
+grpc-web-client = { git = "https://github.com/titanous/grpc-web-client", branch = "main"}
 
 [dev-dependencies]
 wasm-bindgen-test = "0.3.20"
