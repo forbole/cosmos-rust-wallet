@@ -7,27 +7,12 @@
 
 use std::io::{Error as StdIoError, Error};
 use thiserror::Error;
-#[cfg(any(
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "macos",
-    target_os = "android"
-))]
+#[cfg(not(target_arch = "wasm32"))]
 mod native;
-#[cfg(any(
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "macos",
-    target_os = "android"
-))]
+#[cfg(not(target_arch = "wasm32"))]
 use native as sys;
 
-#[cfg(any(
-    target_os = "linux",
-    target_os = "windows",
-    target_os = "macos",
-    target_os = "android"
-))]
+#[cfg(not(target_arch = "wasm32"))]
 pub use native::set_preferences_app_dir;
 
 #[cfg(all(target_arch = "wasm32", target_os = "unknown", feature = "js",))]
