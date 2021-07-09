@@ -39,7 +39,7 @@ impl CosmosClient {
     }
 
     #[cfg(not(target_arch = "wasm32"))]
-    pub async fn grpc_client(&self) -> Result<tonic::transport::Channel, CosmosError> {
+    async fn grpc_client(&self) -> Result<tonic::transport::Channel, CosmosError> {
         let grpc_uri = self
             .grpc_addr
             .parse::<tonic::codegen::http::Uri>()
