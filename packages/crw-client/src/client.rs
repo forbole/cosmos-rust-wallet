@@ -53,7 +53,7 @@ impl CosmosClient {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub async fn grpc_client(&self) -> Result<grpc_web_client::Client, CosmosError> {
+    async fn grpc_client(&self) -> Result<grpc_web_client::Client, CosmosError> {
         Ok(grpc_web_client::Client::new(self.grpc_addr.clone()))
     }
 
