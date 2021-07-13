@@ -1,4 +1,4 @@
-//! Module that provides functions to read and write data from the browser local storage.
+//! Module that provides the functions to read and write the preferences from the browser local storage.
 
 use crate::io::{IoError, Result};
 use web_sys::{Storage, Window};
@@ -18,9 +18,9 @@ fn get_storage() -> Result<Storage> {
         .ok_or(IoError::Unsupported("Local storage is null".to_owned()))?)
 }
 
-/// Loads the a string from the browse `LocalStorage`.
+/// Loads the string representation of a preferences set from the browse `LocalStorage`.
 ///
-/// * `name` - key that uniquely identify the data that will be loaded.
+/// * `name` - key that uniquely identify the preferences set that will be loaded.
 pub fn load(name: &str) -> Result<String> {
     let storage = get_storage()?;
 
@@ -36,10 +36,10 @@ pub fn load(name: &str) -> Result<String> {
         })
 }
 
-/// Saves a string into the browser `LocalStorage`.
+/// Saves the string representation of preferences set into the browser `LocalStorage`.
 ///
-/// * `name` - key that uniquely identify the data that will be saved.
-/// * `value` - the value that will be saved into the browser localStorage.
+/// * `name` - key that uniquely identify the preferences set that will be saved.
+/// * `value` - the preferences set that will be saved into the browser localStorage.
 ///
 /// # Errors
 /// This function returns [Err(IoError::Unsupported)] if the browser don't support the LocalStorage API
@@ -60,7 +60,7 @@ pub fn erase(name: &str) {
     }
 }
 
-/// Check if is present a non empty string into the browser `LocalStorage`.
+/// Check if exist a preferences set into the browser `LocalStorage`.
 pub fn exist(name: &str) -> bool {
     let storage = get_storage();
 

@@ -70,8 +70,8 @@ impl EncryptedPreferences {
             .map_err(|_| EncryptedPreferencesError::from(PreferencesError::DeserializationError))
     }
 
-    /// If already exist a preference with the provided name will be loaded otherwise will be
-    /// created a new empty one.
+    /// Creates a new encrypted preferences set with the provided `name`.
+    /// If already exist a preferences set with the provided name will be loaded the previous one.
     ///
     /// * `name` - The preferences name, can contains only ascii alphanumeric chars or -, _.
     ///

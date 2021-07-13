@@ -1,8 +1,10 @@
-//! This crate provides a set of functions to save and load strings from the storage of the following
-//! devices:
+//! This crate provides a set of functions to save and load the preferences from the storage of the
+//! following devices:
 //! * windows
 //! * macOS
 //! * linux
+//! * android
+//! * ios
 //! * wasm32 on browser
 
 use std::io::{Error as StdIoError, Error};
@@ -53,10 +55,10 @@ fn is_name_valid(name: &str) -> bool {
             .all(|c| c.is_ascii_alphanumeric() || ['-', '_'].contains(&c))
 }
 
-/// Loads a string from the device memory.
+/// Loads the string representation of a preferences set.
 ///
-/// - *name* key that uniquely identify the string that will be loaded.  
-///   The `name` key can contain only ascii alphanumeric characters or -, _.
+/// * `name` - key that uniquely identify the preferences set that will be loaded.  
+/// The `name` key can contain only ascii alphanumeric characters or -, _.
 ///
 /// # Errors
 /// This function can returns one of the following errors:
@@ -71,11 +73,11 @@ pub fn load(name: &str) -> Result<String> {
     }
 }
 
-/// Saves a string into the device memory.
+/// Saves the string representation of preferences set into the device storage.
 ///
-/// - *name* key that uniquely identify the data that will be stored.  
+/// * `name` - key that uniquely identify the preferences set that will be saved.  
 /// The `name` key can contain only ascii alphanumeric characters or -, _.
-/// - *data* The string that will be stored into the device storage.
+/// * `data` - the preferences set that will be stored as a string.
 ///
 /// # Errors
 /// This function can returns one of the following errors:
@@ -89,14 +91,14 @@ pub fn save(name: &str, data: &str) -> Result<()> {
     }
 }
 
-/// Erase the configurations stored into the device memory.
+/// Erase a preferences set stored into the device memory.
 pub fn erase(name: &str) {
     if is_name_valid(name) {
         sys::erase(name)
     }
 }
 
-/// Check if exist a string withe the provided name into the device storage.
+/// Check if exist a preferences set withe the provided name into the device storage.
 pub fn exist(name: &str) -> bool {
     if !is_name_valid(name) {
         return false;

@@ -22,17 +22,17 @@ pub enum PreferencesError {
     SerializationError,
 }
 
-/// Trait that represents a generic preference container.
+/// Trait that represents a generic preferences set.
 pub trait Preferences {
     /// Gets a i32 from the preferences.
     ///
-    /// - *key* The name of the preference to retrieve.
+    /// * `key` - The name of the preference to retrieve.
     fn get_i32(&self, key: &str) -> Option<i32>;
 
     /// Store a i32 into the preferences.
     ///
-    /// - *key* The name of the preference that will be stored.
-    /// - *value* The value that will be stored into the preferences.
+    /// * `key` - The name of the preference that will be stored.
+    /// * `value` - The value that will be stored into the preferences.
     fn put_i32(&mut self, key: &str, value: i32) -> Result<()>;
 
     /// Gets a string from the preferences.
@@ -42,8 +42,8 @@ pub trait Preferences {
 
     /// Store a string into the preferences.
     ///
-    /// - *key* The name of the preference that will be stored.
-    /// - *value* The value that will be stored into the preferences.
+    /// * `key` - The name of the preference that will be stored.
+    /// * `value` - The value that will be stored into the preferences.
     fn put_str(&mut self, key: &str, value: String) -> Result<()>;
 
     /// Gets a boolean from the preferences.
@@ -53,8 +53,8 @@ pub trait Preferences {
 
     /// Store a boolean into the preferences.
     ///
-    /// - *key* The name of the preference that will be stored.
-    /// - *value* The value that will be stored into the preferences.
+    /// * `key` - The name of the preference that will be stored.
+    /// * `value` - The value that will be stored into the preferences.
     fn put_bool(&mut self, key: &str, value: bool) -> Result<()>;
 
     /// Gets an array of bytes from the preferences.
@@ -64,8 +64,8 @@ pub trait Preferences {
 
     /// Store an array of bytes into the preferences.
     ///
-    /// - *key* The name of the preference that will be stored.
-    /// - *value* The array that will be stored into the preferences.
+    /// * `key` - The name of the preference that will be stored.
+    /// * `value` - The array that will be stored into the preferences.
     fn put_bytes(&mut self, key: &str, value: Vec<u8>) -> Result<()>;
 
     /// Delete all the preferences currently loaded.
@@ -79,12 +79,12 @@ pub trait Preferences {
     fn save(&self) -> Result<()>;
 }
 
-/// Deletes a preferences from the device storage
+/// Deletes a preferences set from the device storage
 pub fn delete(name: &str) {
     io::erase(name);
 }
 
-/// Checks if exists a preferences with the provided `name`.
+/// Checks if exists a preferences set with the provided `name`.
 pub fn exist(name: &str) -> bool {
     io::exist(name)
 }

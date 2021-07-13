@@ -1,8 +1,10 @@
-//! Module that provides the functions to read write from a device disk.  
-//! This module supports the following devices:
+//! Module that provides the functions to read and write the preferences from the device storage for the
+//! following os:  
 //! * windows
 //! * macOS
-//! * linux.
+//! * linux
+//! * android
+//! * ios
 
 use crate::io::{IoError, Result};
 use once_cell::sync::Lazy;
@@ -24,11 +26,13 @@ static PREFERENCES_APP_DIR: Lazy<Mutex<String>> = Lazy::new(|| {
 ///
 /// The file is located inside the application config directory that depends on the target device OS.
 ///
-/// |Platform | Value                                 | Example                                                            |
-/// | ------- | ------------------------------------- | -------------------------------------------------------------------|
-/// | Linux   | `$XDG_CONFIG_HOME` or `$HOME`/.config | /home/alice/.config/$CARGO_BIN_NAME/{name}                         |
-/// | macOS   | `$HOME`/Library/Application Support   | /Users/Alice/Library/Application Support/$CARGO_BIN_NAME/{name}    |
-/// | Windows | `{FOLDERID_RoamingAppData}`           | C:\Users\Alice\AppData\Roaming\%CARGO_BIN_NAME%\{name}             |
+/// |Platform | Example                                                                                                    |
+/// | ------- | -----------------------------------------------------------------------------------------------------------|
+/// | Linux   | `$XDG_CONFIG_HOME`/{PREFERENCES_APP_DIR}/{name} or `$HOME/.config/{PREFERENCES_APP_DIR}/{name}`            |
+/// | macOS   | `$HOME`/Library/Application Support/{PREFERENCES_APP_DIR}/{name}                                           |
+/// | Windows |  C:\Users\`$USER`\AppData\Roaming\{PREFERENCES_APP_DIR}/{name}                                             |
+/// | Android | {PREFERENCES_APP_DIR}/{name}                                                                               |
+/// | iOS     | {PREFERENCES_APP_DIR}/{name}                                                                               |
 ///
 /// # Errors
 ///
@@ -39,8 +43,8 @@ fn get_config_file(name: &str, create: bool) -> Result<PathBuf> {
             // In test mode just use the current working directory.
             let mut config_dir = PathBuf::new();
         }
-        else if #[cfg(target_os = "android")] {
-            // On android we can't obtain the path at runtime so the app dir must be an
+        else if #[cfg(any(target_os = "android", target_os = "ios"))] {
+            // On android or ios we can't obtain the path at runtime so the app dir must be an
             // absolute path to the directory where will be stored the configurations.
             let dir = PREFERENCES_APP_DIR.lock().unwrap();
             if dir.is_empty() {
@@ -77,17 +81,17 @@ fn get_config_file(name: &str, create: bool) -> Result<PathBuf> {
 /// Sets the application directory where will be stored the configurations.
 /// On windows, macOS and linux `dir` should be only the name of the directory that will
 /// be create inside the current user app configurations directory.
-/// On Android instead since is not possible to obtain the `appData` directory at runtime
-/// `dir` must be an absolute path to a directory where the application can read and write.
+/// On Android and iOS instead since is not possible to obtain the path where the application
+/// can read and write `dir` must be an absolute path to a directory accessible from the application.
 pub fn set_preferences_app_dir(dir: &str) {
     let mut str = PREFERENCES_APP_DIR.lock().unwrap();
     str.clear();
     str.push_str(dir);
 }
 
-/// Loads data from the file with the provided name.
+/// Loads the string representation of a preferences set.
 ///
-/// * `name` - Name of the configuration file from which will be loaded the data.
+/// * `name` - name of the file from which will be loaded the preferences.
 ///
 /// # Errors
 /// This function can returns one of the following errors:
@@ -104,9 +108,9 @@ pub fn load(name: &str) -> Result<String> {
     }
 }
 
-/// Saves `data` into the configuration file with the provided `name`.
+/// Saves the string representation of preferences set into the device storage.
 ///
-/// * `name` - Name of the configuration file where will be stored the data.
+/// * `name` - Name of the file where will be stored the data.
 /// * `data` - The string that will be stored inside the file.
 ///
 /// # Errors
@@ -128,7 +132,7 @@ pub fn erase(name: &str) {
     }
 }
 
-/// Check if exist a file with the provided `name` into the device storage.
+/// Check if exist a preferences set with the provided `name` into the device storage.
 pub fn exist(name: &str) -> bool {
     let path = get_config_file(name, false);
 

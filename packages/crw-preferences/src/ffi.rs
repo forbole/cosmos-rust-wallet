@@ -99,7 +99,7 @@ pub extern "C" fn preferences_delete(name: *const c_char) {
 /// Creates a new preferences with the provided name or load an already existing preferences
 /// with the provided name.
 ///
-/// - *name* The preferences name, can contains only ascii alphanumeric chars or -, _.
+/// * `name` - The preferences name, can contains only ascii alphanumeric chars or -, _.
 ///
 /// Returns a valid pointer on success or nullptr if an error occurred.
 #[no_mangle]
@@ -118,8 +118,8 @@ pub extern "C" fn preferences(name: *const c_char) -> *mut c_void {
 /// Creates a new encrypted preferences with the provided name or load an already existing preferences
 /// with the provided name.
 ///
-/// - *name* The preferences name, can contains only ascii alphanumeric chars or -, _.
-/// - *password* The password used to secure the preferences.
+/// * `name` - The preferences name, can contains only ascii alphanumeric chars or -, _.
+/// * `password` - The password used to secure the preferences.
 ///
 /// Returns a valid pointer on success or nullptr if an error occurred.
 #[no_mangle]
@@ -152,9 +152,9 @@ pub extern "C" fn preferences_free(preferences: *mut c_void) {
 
 /// Gets an i32 from the preferences.
 ///
-/// - *preferences* pointer to the preferences from which will be extracted the value.
-/// - *key* name of the preference that will be loaded.
-/// - *out* pointer where will be stored the value.
+/// * `preferences` - pointer to the preferences from which will be extracted the value.
+/// * `key` - name of the preference that will be loaded.
+/// * `out` - pointer where will be stored the value.
 ///
 /// Returns 0 on success -1 if the requested value is not present into the preferences or -2
 /// if one or more of the provided arguments is invalid.
@@ -181,9 +181,9 @@ pub extern "C" fn preferences_get_i32(
 
 /// Puts an i32 into the preferences.
 ///
-/// - *preferences* pointer to the preferences where will be stored the value.
-/// - *key* name of the preference that will be stored.
-/// - *value* the value that will be stored.
+/// * `preferences` - pointer to the preferences where will be stored the value.
+/// * `key` - name of the preference that will be stored.
+/// * `value` - the value that will be stored.
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
@@ -209,10 +209,10 @@ pub extern "C" fn preferences_put_i32(
 
 /// Gets a string from the preferences.
 ///
-/// - *preferences* pointer to the preferences from which will be extracted the value.
-/// - *key* name of the preference that will be loaded.
-/// - *out_buf* pointer where will be stored the value.
-/// - *buf_len* maximum number of bytes that can be used from `out_buf`
+/// * `preferences` - pointer to the preferences from which will be extracted the value.
+/// * `key` - name of the preference that will be loaded.
+/// * `out_buf` - pointer where will be stored the value.
+/// * `buf_len` - maximum number of bytes that can be used from `out_buf`
 ///
 /// Returns the number of bytes that would have been written if `out_buf` had been sufficiently large,
 /// 0 if the value is not present into the preferences or -1 on error.
@@ -247,9 +247,9 @@ pub extern "C" fn preferences_get_string(
 
 /// Puts a string into the preferences.
 ///
-/// - *preferences* pointer to the preferences from which will be extracted the value.
-/// - *key* name of the preference that will be loaded.
-/// - *value* the value that will be stored.
+/// * `preferences` - pointer to the preferences from which will be extracted the value.
+/// * `key` - name of the preference that will be loaded.
+/// * `value` - the value that will be stored.
 ///
 /// Returns 0 on success -1 on error.
 #[no_mangle]
@@ -277,9 +277,9 @@ pub extern "C" fn preferences_put_string(
 
 /// Gets a bool from the preferences.
 ///
-/// - *preferences* pointer to the preferences from which will be extracted the value.
-/// - *key* name of the preference that will be loaded.
-/// - *out* pointer where will be stored the value.
+/// * `preferences` - pointer to the preferences from which will be extracted the value.
+/// * `key` - name of the preference that will be loaded.
+/// * `out` - pointer where will be stored the value.
 ///
 /// Returns 0 on success -1 if the requested value is not present into the preferences or -2
 /// if one or more of the provided arguments is invalid.
@@ -306,9 +306,9 @@ pub extern "C" fn preferences_get_bool(
 
 /// Puts a bool into the preferences.
 ///
-/// - *preferences* pointer to the preferences where will be stored the value.
-/// - *key* name of the preference that will be stored.
-/// - *value* the value that will be stored.
+/// * `preferences` - pointer to the preferences where will be stored the value.
+/// * `key` - name of the preference that will be stored.
+/// * `value` - the value that will be stored.
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
@@ -334,10 +334,10 @@ pub extern "C" fn preferences_put_bool(
 
 /// Gets an array of bytes from the preferences.
 ///
-/// - *preferences* pointer to the preferences from which will be extracted the value.
-/// - *key* name of the preference that will be loaded.
-/// - *out_buf* pointer where will be stored the value.
-/// - *buf_len* maximum number of bytes that can be used from `out_buf`
+/// * `preferences` - pointer to the preferences from which will be extracted the value.
+/// * `key` - name of the preference that will be loaded.
+/// * `out_buf` - pointer where will be stored the value.
+/// * `buf_len` - maximum number of bytes that can be used from `out_buf`
 ///
 /// Returns the number of bytes that would have been written if `out_buf` had been sufficiently large,
 /// 0 if the value is not present into the preferences or -1 on error.
@@ -370,10 +370,10 @@ pub extern "C" fn preferences_get_bytes(
 
 /// Puts an array of bytes into the preferences.
 ///
-/// - *preferences* pointer to the preferences from which will be extracted the value.
-/// - *key* name of the preference that will be stored.
-/// - *value* array that will be stored into the preferences.
-/// - *len* length of `value`.
+/// * `preferences` - pointer to the preferences from which will be extracted the value.
+/// * `key` - name of the preference that will be stored.
+/// * `value` - array that will be stored into the preferences.
+/// * `len` - length of `value`.
 ///
 /// Return 0 on on success, -1 on error.
 #[no_mangle]
@@ -402,7 +402,7 @@ pub extern "C" fn preferences_put_bytes(
 
 /// Delete all the preferences currently loaded from the provided preferences instance.
 ///
-/// - *preferences* pointer to the preferences instance.
+/// * `preferences` - pointer to the preferences instance.
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
@@ -419,7 +419,7 @@ pub extern "C" fn preferences_clear(preferences: *mut c_void) -> c_int {
 /// Delete all the preferences currently loaded and also the one stored into the
 /// device storage from the provided preferences instance
 ///
-/// - *preferences* pointer to the preferences instance.
+/// * `preferences` - pointer to the preferences instance.
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]
@@ -435,7 +435,7 @@ pub extern "C" fn preferences_erase(preferences: *mut c_void) -> c_int {
 
 /// Saves the preferences into the device disk.
 ///
-/// - *preferences* pointer to the preferences instance.
+/// * `preferences` - pointer to the preferences instance.
 ///
 /// Returns 0 on success or -1 on error.
 #[no_mangle]

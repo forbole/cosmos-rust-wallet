@@ -53,9 +53,8 @@ impl UnencryptedPreferences {
         Ok(())
     }
 
-    /// Creates a new [UnencryptedPreferences] with the provided name.
-    /// If already exist a preference with the provided name will be loaded otherwise will be
-    /// created a new empty one.
+    /// Creates a new preferences set with the provided `name`.
+    /// If already exist a preferences set with the provided name will be loaded the previous one.
     ///
     /// * `name` - The preferences name, can contains only ascii alphanumeric chars or -, _.
     ///

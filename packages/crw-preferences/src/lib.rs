@@ -1,6 +1,7 @@
 //! Crate that provides a set of utility to store preferences into the device storage.  
+//! The preferences are organized in sets, each one identified by an unique name.
 //!
-//! The values that can be saved into the preference are:
+//! The values that can be saved into a preference set are:
 //! * `i32`
 //! * `bool`
 //! * `str`
