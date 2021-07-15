@@ -1,6 +1,6 @@
 # Preferences package
 This package take care of storing a set of preferences into the device storage.  
-The preferences sets are stored on different locations based on the device os. The table below shows
+The preferences sets are stored in different locations based on the device os. The table below shows
 where the preferences are stored based on the device's os.
 
 |Platform | Location |  

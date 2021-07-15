@@ -61,7 +61,7 @@ fn is_name_valid(name: &str) -> bool {
 /// The `name` key can contain only ascii alphanumeric characters or -, _.
 ///
 /// # Errors
-/// This function can returns one of the following errors:
+/// This function returns one of the following errors:
 /// * [IoError::Read] - if an error occurred while reading the data from the device storage
 /// * [IoError::EmptyData] - if the data associated to the provided `name` is empty
 /// * [IoError::Unsupported] - if the device don't supports this operation

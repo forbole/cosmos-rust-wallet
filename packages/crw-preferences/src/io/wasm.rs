@@ -18,7 +18,7 @@ fn get_storage() -> Result<Storage> {
         .ok_or(IoError::Unsupported("Local storage is null".to_owned()))?)
 }
 
-/// Loads the string representation of a preferences set from the browse `LocalStorage`.
+/// Loads the string representation of a preferences set from the browser `LocalStorage`.
 ///
 /// * `name` - key that uniquely identify the preferences set that will be loaded.
 pub fn load(name: &str) -> Result<String> {
@@ -55,12 +55,12 @@ pub fn erase(name: &str) {
     let storage = get_storage();
 
     if let Ok(storage) = storage {
-        // Make the compiler happy, an error here should neve occur.
+        // Make the compiler happy, an error here should never occur.
         let _ = Storage::set_item(&storage, name, "");
     }
 }
 
-/// Check if exist a preferences set into the browser `LocalStorage`.
+/// Check if there are existent preferences set into the browser `LocalStorage`.
 pub fn exist(name: &str) -> bool {
     let storage = get_storage();
 

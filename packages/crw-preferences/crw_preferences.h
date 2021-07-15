@@ -14,7 +14,7 @@
  * On Android instead since is not possible to obtain the `appData` directory at runtime
  * must be an absolute path to a directory where the application can read and write.
  * @return Returns 0 on success -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int set_preferences_app_dir(const char *name);
@@ -37,7 +37,7 @@ void preferences_delete(const char *name);
  * loads a previously created preferences with the same name.
  * @param name The preferences name, can contains only ascii alphanumeric chars or -, _.
  * @return Returns a valid pointer on success or nullptr if an error occurred.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 void *preferences(const char *name);
@@ -48,14 +48,14 @@ void *preferences(const char *name);
  * @param name The preferences name, can contains only ascii alphanumeric chars or -, _.
  * @param password The password used to secure the preferences.
  * @return Returns a valid pointer on success or nullptr if an error occurred.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 void *encrypted_preferences(const char *name,
                             const char *password);
 
 /**
- * @biref Release all the resources owned by a preferences instance.
+ * @brief Release all the resources owned by a preferences instance.
  * @param preferences Pointer to the preference instance to free.
  */
 void preferences_free(void *preferences);
@@ -67,7 +67,7 @@ void preferences_free(void *preferences);
  * @param out pointer where will be stored the value.
  * @return Returns 0 on success -1 if the requested value is not
  * present into the preferences or -2 if one or more of the provided arguments is invalid.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_get_i32(const void *preferences, const char *key, int32_t *out);
@@ -78,7 +78,7 @@ int preferences_get_i32(const void *preferences, const char *key, int32_t *out);
  * @param key name of the preference that will be stored.
  * @param value the value that will be stored.
  * @return Returns 0 on success or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_put_i32(void *preferences, const char *key, int32_t value);
@@ -91,7 +91,7 @@ int preferences_put_i32(void *preferences, const char *key, int32_t value);
  * @param buf_len maximum number of bytes that can be used from `out_buf`
  * @return Returns the number of bytes that would have been written if `out_buf`
  * had been sufficiently large,0 if the value is not present into the preferences or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_get_string(const void *preferences,
@@ -105,7 +105,7 @@ int preferences_get_string(const void *preferences,
  * @param key name of the preference that will be loaded.
  * @param value the value that will be stored.
  * @return Returns 0 on success -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_put_string(void *preferences, const char *key, const char *value);
@@ -117,7 +117,7 @@ int preferences_put_string(void *preferences, const char *key, const char *value
  * @param out pointer where will be stored the value.
  * @return Returns 0 on success -1 if the requested value is not present into the
  * preferences or -2 if one or more of the provided arguments is invalid.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_get_bool(const void *preferences, const char *key, bool *out);
@@ -128,7 +128,7 @@ int preferences_get_bool(const void *preferences, const char *key, bool *out);
  * @param key name of the preference that will be stored.
  * @param value the value that will be stored.
  * @return Returns 0 on success or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_put_bool(void *preferences, const char *key, bool value);
@@ -141,7 +141,7 @@ int preferences_put_bool(void *preferences, const char *key, bool value);
  * @param buf_len maximum number of bytes that can be used from `out_buf`
  * @return  Returns the number of bytes that would have been written if `out_buf`
  * had been sufficiently large, 0 if the value is not present into the preferences or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_get_bytes(const void *preferences,
@@ -156,7 +156,7 @@ int preferences_get_bytes(const void *preferences,
  * @param value array that will be stored into the preferences.
  * @param len length of `value`.
  * @return Returns 0 on success, -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_put_bytes(void *preferences,
@@ -169,7 +169,7 @@ int preferences_put_bytes(void *preferences,
  * preferences instance.
  * @param preferences pointer to the preferences instance.
  * @return Returns 0 on success or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_clear(void *preferences);
@@ -179,7 +179,7 @@ int preferences_clear(void *preferences);
  * into the device storage from the provided preferences instance
  * @param preferences pointer to the preferences instance.
  * @return Returns 0 on success or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_erase(void *preferences);
@@ -188,7 +188,7 @@ int preferences_erase(void *preferences);
  * @brief Saves the preferences into the device disk.
  * @param preferences pointer to the preferences instance.
  * @return Returns 0 on success or -1 on error.
- * In case of error the error cause can be obtained using the error_message_utf8
+ * In case of error, the error cause can be obtained using the error_message_utf8
  * function.
  */
 int preferences_save(void *preferences);

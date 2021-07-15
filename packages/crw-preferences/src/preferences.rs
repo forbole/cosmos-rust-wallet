@@ -84,7 +84,7 @@ pub fn delete(name: &str) {
     io::erase(name);
 }
 
-/// Checks if exists a preferences set with the provided `name`.
+/// Checks if there are existent preferences set with the provided `name`.
 pub fn exist(name: &str) -> bool {
     io::exist(name)
 }

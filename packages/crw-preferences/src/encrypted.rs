@@ -36,6 +36,19 @@ pub struct EncryptedPreferences {
 }
 
 impl EncryptedPreferences {
+    /// Loads a preferences set from the device disk, if the preferences set don't exist into the
+    /// device disk will be created a new empty one.
+    ///
+    /// * `password` - the password used decrypt the preferences set.
+    /// * `name` - the preferences set name.
+    ///
+    /// # Errors
+    /// This function can return the following errors:
+    /// * [EncryptedPreferencesError::DecryptionFailed] if the provided password is not valid or the
+    /// data is corrupted.
+    /// * [PreferencesError::InvalidName] if the provided name contains non ascii alphanumeric chars
+    /// * [PreferencesError::DeserializationError] if the data inside the disc is not valid.
+    /// * [PreferencesError::IO] if an error occurred while reading the data from the device storage.
     fn load_from_disk(
         password: &str,
         name: &str,
