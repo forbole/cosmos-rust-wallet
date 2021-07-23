@@ -1,4 +1,4 @@
 /target
-packages/crw-wallet/pkg
-packages/crw-wallet/target
+packages/**/pkg
+packages/**/target
 Cargo.lock
