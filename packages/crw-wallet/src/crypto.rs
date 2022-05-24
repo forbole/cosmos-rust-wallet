@@ -10,7 +10,7 @@ use bitcoin::{
     network::constants::Network,
     secp256k1::Secp256k1,
     util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey},
-    PublicKey,
+    PrivateKey, PublicKey,
 };
 use hdpath::StandardHDPath;
 use k256::ecdsa::{signature::Signer, Signature, SigningKey};
@@ -141,7 +141,7 @@ impl MnemonicWallet {
 
     /// Gets the public key derived from the mnemonic.
     pub fn get_pub_key(&self) -> PublicKey {
-        self.keychain.ext_public_key.public_key
+        PublicKey::new(self.keychain.ext_public_key.public_key)
     }
 
     /// Gets the bech32 address derived from the mnemonic and the provided
@@ -179,8 +179,11 @@ impl MnemonicWallet {
             return Result::Ok(Vec::new());
         }
         //  Get the sign key from the private key
-        let sign_key =
-            SigningKey::from_bytes(&self.keychain.ext_private_key.private_key.to_bytes()).unwrap();
+        let sign_key = SigningKey::from_bytes(
+            &(PrivateKey::new(self.keychain.ext_private_key.private_key, Network::Bitcoin)
+                .to_bytes()),
+        )
+        .unwrap();
 
         // Sign the data provided data
         let signature: Signature = sign_key
