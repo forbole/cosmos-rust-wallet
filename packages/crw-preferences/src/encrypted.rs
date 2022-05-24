@@ -262,7 +262,7 @@ mod test {
         let set_name = "encrypted-exist";
 
         let mut p = EncryptedPreferences::new("password", set_name).unwrap();
-        p.save();
+        p.save().unwrap();
 
         assert!(preferences::exist(set_name));
 
