@@ -6,10 +6,11 @@
 use crate::WalletError;
 use bech32::{ToBase32, Variant::Bech32};
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
+use bitcoin::util::bip32::ChildNumber;
 use bitcoin::{
     network::constants::Network,
     secp256k1::Secp256k1,
-    util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey},
+    util::bip32::{ExtendedPrivKey, ExtendedPubKey},
     PublicKey,
 };
 use hdpath::StandardHDPath;
@@ -127,11 +128,28 @@ impl MnemonicWallet {
     fn generate_keychain(hd_path: StandardHDPath, seed: Seed) -> Result<Keychain, WalletError> {
         let private_key = ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes())
             .and_then(|priv_key| {
-                priv_key.derive_priv(&Secp256k1::new(), &DerivationPath::from(hd_path))
+                let child_nubers: Vec<ChildNumber> = vec![
+                    ChildNumber::Hardened {
+                        index: hd_path.purpose().as_value().as_number(),
+                    },
+                    ChildNumber::Hardened {
+                        index: hd_path.coin_type(),
+                    },
+                    ChildNumber::Hardened {
+                        index: hd_path.account(),
+                    },
+                    ChildNumber::Normal {
+                        index: hd_path.change(),
+                    },
+                    ChildNumber::Normal {
+                        index: hd_path.index(),
+                    },
+                ];
+                priv_key.derive_priv(&Secp256k1::new(), &child_nubers)
             })
             .map_err(|err| WalletError::PrivateKey(err.to_string()))?;
 
-        let public_key = ExtendedPubKey::from_private(&Secp256k1::new(), &private_key);
+        let public_key = ExtendedPubKey::from_priv(&Secp256k1::new(), &private_key);
 
         Ok(Keychain {
             ext_private_key: private_key,
@@ -141,7 +159,8 @@ impl MnemonicWallet {
 
     /// Gets the public key derived from the mnemonic.
     pub fn get_pub_key(&self) -> PublicKey {
-        self.keychain.ext_public_key.public_key
+        let compressed_public_key = self.keychain.ext_public_key.public_key.serialize();
+        PublicKey::from_slice(&compressed_public_key).unwrap()
     }
 
     /// Gets the bech32 address derived from the mnemonic and the provided
@@ -180,7 +199,8 @@ impl MnemonicWallet {
         }
         //  Get the sign key from the private key
         let sign_key =
-            SigningKey::from_bytes(&self.keychain.ext_private_key.private_key.to_bytes()).unwrap();
+            SigningKey::from_bytes(&self.keychain.ext_private_key.private_key.secret_bytes())
+                .unwrap();
 
         // Sign the data provided data
         let signature: Signature = sign_key
