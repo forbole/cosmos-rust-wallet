@@ -54,6 +54,7 @@ pub extern "C" fn wallet_random_mnemonic() -> *mut c_char {
 /// This function returns a nullptr in case of error and store the error cause in a local thread
 /// global variable that can be accessed using the [error_message_utf8](ffi_helpers::error_handling::error_message_utf8) function.
 #[no_mangle]
+#[cfg(all(test, feature = "with-bitcoin"))]
 pub extern "C" fn wallet_from_mnemonic(
     mnemonic: *const c_char,
     derivation_path: *const c_char,
@@ -234,6 +235,7 @@ pub extern "C" fn wallet_sign_free(ptr: *mut Signature) {
 export_error_handling_functions!();
 
 #[cfg(test)]
+#[cfg(all(test, feature = "with-bitcoin"))]
 mod tests {
     use crate::ffi::{
         cstring_free, wallet_free, wallet_from_mnemonic, wallet_get_bech32_address,

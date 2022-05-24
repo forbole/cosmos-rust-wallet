@@ -223,6 +223,7 @@ impl From<EncodeError> for TxBuildError {
 }
 
 #[cfg(test)]
+#[cfg(all(test, feature = "with-bitcoin"))]
 mod tests {
     use crate::tx::{TxBuildError, TxBuilder};
     use cosmos_sdk_proto::cosmos::bank::v1beta1::MsgSend;

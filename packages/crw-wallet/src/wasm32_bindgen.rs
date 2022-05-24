@@ -11,6 +11,7 @@ pub struct JsMnemonicWallet {
 }
 
 #[wasm_bindgen(js_class = MnemonicWallet)]
+#[cfg(all(test, feature = "with-bitcoin"))]
 impl JsMnemonicWallet {
     #[wasm_bindgen(constructor)]
     pub fn new(mnemonic: &str, derivation_path: &str) -> Result<JsMnemonicWallet, JsValue> {

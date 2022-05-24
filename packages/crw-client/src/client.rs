@@ -22,7 +22,7 @@ pub struct CosmosClient {
 }
 
 impl CosmosClient {
-    /// Create a new CosmosClient instance that communicates with the full node.  
+    /// Create a new CosmosClient instance that communicates with the full node.
     /// The client will communicate using `lcd_address` for the legacy LCD requests
     /// and `grpc_addr` for the new gRPC request.
     ///
@@ -168,6 +168,7 @@ mod tests {
     }
 
     #[actix_rt::test]
+    #[cfg(all(test, feature = "with-bitcoin"))]
     async fn broadcast_tx() {
         let wallet = MnemonicWallet::new(TEST_MNEMONIC, DESMOS_DERIVATION_PATH).unwrap();
 

@@ -6,10 +6,11 @@
 use crate::WalletError;
 use bech32::{ToBase32, Variant::Bech32};
 use bip39::{Language, Mnemonic, MnemonicType, Seed};
+
 use bitcoin::{
     network::constants::Network,
     secp256k1::Secp256k1,
-    util::bip32::{DerivationPath, ExtendedPrivKey, ExtendedPubKey},
+    util::bip32::{ChildNumber, DerivationPath, ExtendedPrivKey, ExtendedPubKey},
     PublicKey,
 };
 use hdpath::StandardHDPath;
@@ -50,6 +51,7 @@ impl MnemonicWallet {
     ///
     /// let wallet = MnemonicWallet::new(mnemonic, cosmos_dp).unwrap();
     /// ```
+    #[cfg(all(test, feature = "with-bitcoin"))]
     pub fn new(
         mnemonic_phrase: &str,
         derivation_path: &str,
@@ -88,6 +90,7 @@ impl MnemonicWallet {
     ///
     /// let (wallet, mnemonic) = MnemonicWallet::random(cosmos_dp).unwrap();
     /// ```
+    #[cfg(all(test, feature = "with-bitcoin"))]
     pub fn random(derivation_path: &str) -> Result<(MnemonicWallet, String), WalletError> {
         let mnemonic = Mnemonic::new(MnemonicType::Words24, Language::English);
         let phrase = mnemonic.phrase().to_owned();
@@ -101,6 +104,7 @@ impl MnemonicWallet {
     /// # Errors
     ///
     /// Returns an [`Err`] if the provided `derivation_path` is invalid.
+    #[cfg(all(test, feature = "with-bitcoin"))]
     pub fn set_derivation_path(&mut self, derivation_path: &str) -> Result<(), WalletError> {
         // Update only if the derivation path is different.
         if derivation_path == self.derivation_path {
@@ -124,10 +128,12 @@ impl MnemonicWallet {
     }
 
     /// Utility function to generate the Secp256k1 keypair.
+    #[cfg(all(test, feature = "with-bitcoin"))]
     fn generate_keychain(hd_path: StandardHDPath, seed: Seed) -> Result<Keychain, WalletError> {
         let private_key = ExtendedPrivKey::new_master(Network::Bitcoin, seed.as_bytes())
             .and_then(|priv_key| {
-                priv_key.derive_priv(&Secp256k1::new(), &DerivationPath::from(hd_path))
+                let children: Vec<ChildNumber> = hd_path.into();
+                priv_key.derive_priv(&Secp256k1::new(), &DerivationPath::from(children))
             })
             .map_err(|err| WalletError::PrivateKey(err.to_string()))?;
 
@@ -192,6 +198,7 @@ impl MnemonicWallet {
 }
 
 #[cfg(test)]
+#[cfg(all(test, feature = "with-bitcoin"))]
 mod tests {
     use super::*;
     use hex;
