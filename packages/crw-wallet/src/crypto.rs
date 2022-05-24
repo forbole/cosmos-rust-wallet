@@ -15,7 +15,6 @@ use bitcoin::{
 };
 use hdpath::StandardHDPath;
 use k256::ecdsa::{signature::Signer, Signature, SigningKey};
-use ripemd160::Ripemd160;
 use sha2::{Digest, Sha256};
 use std::convert::TryFrom;
 
@@ -180,7 +179,7 @@ impl MnemonicWallet {
         let pk_hash = hasher.finalize();
 
         // Insert the hash result in the ripdem hash function
-        let mut rip_hasher = Ripemd160::new();
+        let mut rip_hasher = ripemd::Ripemd160::default();
         rip_hasher.update(pk_hash);
         let rip_result = rip_hasher.finalize();
 
