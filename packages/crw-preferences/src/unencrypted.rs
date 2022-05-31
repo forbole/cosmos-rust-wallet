@@ -209,7 +209,7 @@ mod tests {
         let set_name = "unencrypted-exist";
 
         let mut p = UnencryptedPreferences::new(set_name).unwrap();
-        p.save();
+        p.save().unwrap();
 
         assert!(preferences::exist(set_name));
 

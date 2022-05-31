@@ -53,16 +53,13 @@ impl CosmosClient {
             .await
             .map_err(|err| CosmosError::Lcd(err.to_string()))?;
 
-        let node_info_response: NodeInfoResponse;
         match response.status() {
             StatusCode::OK => {
                 // Unwrap here is safe since we already knew that the response is good
-                node_info_response = response.json::<NodeInfoResponse>().await.unwrap()
+                Ok(response.json::<NodeInfoResponse>().await.unwrap().node_info)
             }
-            status_code => return Err(CosmosError::Lcd(status_code.to_string())),
+            status_code => Err(CosmosError::Lcd(status_code.to_string())),
         }
-
-        Ok(node_info_response.node_info)
     }
 
     /// Returns the account data associated to the given address.

@@ -150,7 +150,7 @@ pub extern "C" fn wallet_get_public_key(
     }
 
     let pub_key = unsafe {
-        let key = ptr.as_ref().unwrap().get_pub_key().key;
+        let key = ptr.as_ref().unwrap().get_pub_key().inner;
 
         if compressed != 0 {
             key.serialize().to_vec()
