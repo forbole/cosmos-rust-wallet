@@ -25,7 +25,7 @@ export_error_handling_functions!();
 /// ```
 /// use libc::c_char;
 /// pub fn c_string_length(str: *const c_char) -> usize {
-///     let str = !str_or_return(str, 0);
+///     let str = !check_str(str, 0);
 ///     str.len()
 /// }
 /// ```

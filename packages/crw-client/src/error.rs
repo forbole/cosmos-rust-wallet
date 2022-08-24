@@ -21,7 +21,7 @@ pub enum CosmosError {
 }
 
 /// The various error that can be raised from [`super::tx::TxBuilder`].
-#[derive(Error, Debug, Clone, PartialEq)]
+#[derive(Error, Debug, Clone, Eq, PartialEq)]
 pub enum TxBuildError {
     #[error("Encoding error: {0}")]
     Encode(String),
