@@ -6,6 +6,7 @@ edition = "2018"
 
 [lib]
 crate-type = ["cdylib", "staticlib", "lib"]
+doctest = false
 
 [dependencies]
 cocoon = "0.3.0"
