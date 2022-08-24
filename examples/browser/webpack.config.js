@@ -9,7 +9,6 @@ module.exports = {
   },
   experiments: {
     asyncWebAssembly: true,
-    syncWebAssembly: true,
   },
   mode: "development",
   plugins: [
