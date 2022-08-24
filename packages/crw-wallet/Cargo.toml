@@ -13,7 +13,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 bech32 = { version = "0.9.0" }
-bitcoin = { version = "0.28.1" }
+bitcoin = { version = "0.29.1" }
 hdpath = {version = "0.6.0", features = ["with-bitcoin"] }
 k256 = { version = "0.11.4", features = ["ecdsa-core", "ecdsa", "sha256"]}
 ripemd = { version = "0.1.1" }
