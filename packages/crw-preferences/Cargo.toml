@@ -35,5 +35,5 @@ optional = true
 package = "wasm-bindgen"
 
 [features]
-js = ["web-sys", "bindgen", "rand/wasm-bindgen"]
+js = ["web-sys", "bindgen"]
 ffi = ["ffi_helpers", "libc"]
