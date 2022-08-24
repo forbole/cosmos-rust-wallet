@@ -40,5 +40,5 @@ hex = "0.4.3"
 
 [features]
 default = []
-wasm-bindgen = ["bindgen", "wasm-bindgen-futures", "parking_lot", "rand"]
+wasm-bindgen = ["bindgen", "wasm-bindgen-futures", "parking_lot", "rand", "getrandom/js"]
 ffi = ["libc", "ffi_helpers"]
