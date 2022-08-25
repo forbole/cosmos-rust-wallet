@@ -2,6 +2,8 @@ name: crw-client
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 defaults:
