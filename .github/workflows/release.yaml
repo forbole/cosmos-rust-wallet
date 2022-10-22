@@ -1,0 +1,35 @@
+name: Publish Packages
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  publish:
+    name: Publish packages on crates.io
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout 🛎️
+        uses: actions/checkout@v2
+
+      - name: Setup Rust ⚙
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: 1.61.0
+          override: true
+          components: rustfmt, clippy
+
+      - name: Publish crw-wallet crates.io 📤
+        uses: katyo/publish-crates@v1
+        with:
+          path: './packages/crw-wallet'
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+      - name: Publish crw-client crates.io 📤
+        uses: katyo/publish-crates@v1
+        with:
+          path: './packages/crw-client'
+          registry-token: ${{ secrets.CARGO_REGISTRY_TOKEN }}
